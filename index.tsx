@@ -24,10 +24,58 @@ import {
   FileJson,
   UploadCloud,
   Save,
-  LogOut
+  LogOut,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 
 // --- Types & Initial Data ---
+
+interface Project {
+  name: string;
+  role: string;
+  date: string;
+  desc: string;
+  details: string[];
+}
+
+interface Education {
+  institution: string;
+  major: string;
+  degree: string;
+  start: string;
+  end: string;
+}
+
+interface Skills {
+  languages: string[];
+  frontend: string[];
+  backend: string[];
+  hardware: string[];
+  others: string[];
+  [key: string]: string[];
+}
+
+interface Basics {
+  name: string;
+  title: string;
+  phone: string;
+  email: string;
+  location: string;
+  salary: string;
+  experience: string;
+  summary: string;
+  avatar: string;
+  major: string;
+}
+
+interface ResumeData {
+  basics: Basics;
+  education: Education[];
+  skills: Skills;
+  certificates: string[];
+  projects: Project[];
+}
 
 const THEME_COLORS = {
   blue: "blue",
@@ -43,7 +91,7 @@ const TEMPLATES = {
 };
 
 // Placeholder data for public repository
-const initialResumeData = {
+const initialResumeData: ResumeData = {
   basics: {
     name: "您的姓名",
     title: "求职意向 / 职位头衔",
@@ -53,7 +101,8 @@ const initialResumeData = {
     salary: "期望薪资",
     experience: "年龄 | 经验",
     summary: "这里是您的个人简介。请简要描述您的专业背景、核心技能以及职业目标。例如：具有X年开发经验，熟悉React与Node.js，善于解决复杂问题，具备良好的团队协作能力，对新技术保持敏锐的洞察力。",
-    avatar: "" // Base64 string for avatar
+    avatar: "",
+    major: "主修专业"
   },
   education: [
     {
@@ -124,7 +173,7 @@ const EditableField = ({
   placeholder = "", 
   multiline = false,
   darkTheme = false 
-}) => {
+}: any) => {
   if (!isEditing) {
     return <span className={`${className} whitespace-pre-wrap`}>{value}</span>;
   }
@@ -157,15 +206,15 @@ const EditableField = ({
   );
 };
 
-const SectionControls = ({ onAdd, label, isEditing, darkTheme = false }) => {
+const SectionControls = ({ onAdd, label, isEditing, darkTheme = false }: any) => {
   if (!isEditing) return null;
   return (
     <button 
       onClick={onAdd}
       className={`mt-2 flex items-center gap-1 text-xs font-bold uppercase tracking-wider py-1.5 px-3 rounded border border-dashed transition-all opacity-60 hover:opacity-100 ${
         darkTheme 
-          ? "border-white/30 text-white/50 hover:text-white hover:border-white" 
-          : "border-slate-300 text-slate-500 hover:text-blue-600 hover:border-blue-600"
+          ? "border-white/40 text-white/80 hover:bg-white/10" 
+          : "border-slate-400 text-slate-600 hover:bg-slate-100"
       }`}
     >
       <Plus size={14} /> 添加{label}
@@ -173,426 +222,528 @@ const SectionControls = ({ onAdd, label, isEditing, darkTheme = false }) => {
   );
 };
 
-const DeleteButton = ({ onClick, className = "absolute -left-8 top-0" }) => (
+const DeleteButton = ({ onClick }: any) => (
   <button 
-    onClick={(e) => { e.stopPropagation(); onClick(); }}
-    className={`${className} p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors z-10`}
-    title="删除此项"
+    onClick={onClick}
+    className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+    title="删除"
   >
-    <Trash2 size={16} />
+    <Trash2 size={14} />
   </button>
 );
 
-const AvatarUpload = ({ avatar, onChange, isEditing, name }) => {
-  const fileInputRef = useRef(null);
+const MoveButton = ({ onClick, direction, disabled }: any) => (
+  <button 
+    onClick={onClick}
+    disabled={disabled}
+    className={`p-1 rounded transition-colors ${
+      disabled 
+        ? "text-gray-300 cursor-not-allowed" 
+        : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+    }`}
+    title={direction === 'up' ? "上移" : "下移"}
+  >
+    {direction === 'up' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+  </button>
+);
 
-  const handleFileChange = (e) => {
+// --- Resume Templates ---
+
+const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
+  data: ResumeData;
+  setData: (data: ResumeData) => void;
+  isEditing: boolean;
+  themeColor: string;
+  moveProject: (index: number, direction: 'up' | 'down') => void;
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: any) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        onChange(reader.result);
+        if (typeof reader.result === 'string') {
+          setData({ ...data, basics: { ...data.basics, avatar: reader.result } });
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const getThemeClass = (type: string) => {
+    const colors: any = {
+      blue: { bg: "bg-slate-900", text: "text-blue-400", border: "border-blue-500/30" },
+      emerald: { bg: "bg-slate-900", text: "text-emerald-400", border: "border-emerald-500/30" },
+      violet: { bg: "bg-slate-900", text: "text-violet-400", border: "border-violet-500/30" },
+      slate: { bg: "bg-slate-900", text: "text-slate-300", border: "border-slate-500/30" },
+      rose: { bg: "bg-slate-900", text: "text-rose-400", border: "border-rose-500/30" },
+    };
+    return colors[themeColor]?.[type] || colors.blue[type];
+  };
+
   return (
-    <div className="relative group shrink-0">
-      <div className={`w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white/20 shadow-lg flex items-center justify-center bg-slate-800 text-white text-3xl font-bold relative ${isEditing ? 'cursor-pointer hover:border-blue-400' : ''}`}
-           onClick={() => isEditing && fileInputRef.current?.click()}>
-        {avatar ? (
-          <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
-        ) : (
-          <span>{name?.[0] || "Me"}</span>
-        )}
-        
-        {isEditing && (
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-            <Upload className="text-white w-8 h-8" />
+    <div className="flex flex-col md:flex-row print:flex-row min-h-[1123px] w-full bg-white shadow-xl print:shadow-none print:w-full">
+      {/* Sidebar - Dark Theme */}
+      <div className={`w-full md:w-1/3 print:w-1/3 ${getThemeClass('bg')} text-slate-300 p-8 flex flex-col gap-8`}>
+        {/* Avatar Section */}
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white/10 bg-white/5 flex items-center justify-center">
+              {data.basics.avatar ? (
+                <img src={data.basics.avatar} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User size={48} className="text-white/20" />
+              )}
+            </div>
+            {isEditing && (
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
+              >
+                <Upload size={20} className="text-white" />
+              </button>
+            )}
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
           </div>
-        )}
-      </div>
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        className="hidden" 
-        accept="image/*"
-      />
-    </div>
-  );
-};
 
-// --- Templates ---
-
-// 1. Modern Sidebar Template
-const ModernTemplate = ({ resume, isEditing, updateBasic, updateEducation, updateSkills, updateCertificate, updateProject, updateProjectDetail, addEducation, removeEducation, addSkill, removeSkill, addCertificate, removeCertificate, addProject, removeProject, addProjectDetail, removeProjectDetail, themeColor }) => {
-  const bgColors = {
-    blue: "bg-slate-900",
-    emerald: "bg-emerald-900",
-    violet: "bg-violet-950",
-    slate: "bg-slate-800",
-    rose: "bg-rose-950"
-  };
-  
-  const accentColors = {
-    blue: "text-blue-400",
-    emerald: "text-emerald-400",
-    violet: "text-violet-400",
-    slate: "text-slate-400",
-    rose: "text-rose-400"
-  };
-
-  const sidebarBg = bgColors[themeColor] || bgColors.blue;
-  const accentText = accentColors[themeColor] || accentColors.blue;
-
-  return (
-    <div className="flex flex-col md:flex-row print:flex-row h-full min-h-[297mm]">
-      {/* Left Sidebar */}
-      <div className={`w-full md:w-1/3 print:w-1/3 ${sidebarBg} text-slate-300 p-8 flex flex-col gap-8 print:h-full`}>
-        {/* Header Profile Section */}
-        <div className="text-center md:text-left space-y-4 flex flex-col items-center md:items-start">
-          <AvatarUpload 
-            avatar={resume.basics.avatar} 
-            name={resume.basics.name} 
-            onChange={(v) => updateBasic("avatar", v)} 
-            isEditing={isEditing} 
-          />
-          
-          <div className="space-y-2 w-full">
+          <div className="text-center w-full">
             <EditableField 
-              value={resume.basics.name} 
-              onChange={(v) => updateBasic("name", v)} 
-              isEditing={isEditing} 
+              value={data.basics.name} 
+              onChange={(val: string) => setData({...data, basics: {...data.basics, name: val}})}
+              isEditing={isEditing}
               darkTheme={true}
-              className="text-3xl font-bold text-white tracking-wide block"
-              placeholder="姓名"
+              className="text-3xl font-bold text-white block mb-2"
+              placeholder="您的姓名"
             />
             <EditableField 
-              value={resume.basics.title} 
-              onChange={(v) => updateBasic("title", v)} 
-              isEditing={isEditing} 
+              value={data.basics.title} 
+              onChange={(val: string) => setData({...data, basics: {...data.basics, title: val}})}
+              isEditing={isEditing}
               darkTheme={true}
-              className={`${accentText} font-medium text-lg block`}
+              className={`text-lg block ${getThemeClass('text')}`}
               placeholder="职位头衔"
             />
           </div>
 
-          <div className="flex flex-wrap gap-2 text-sm mt-2 justify-center md:justify-start items-center w-full">
-            <EditableField 
-              value={resume.basics.experience} 
-              onChange={(v) => updateBasic("experience", v)} 
-              isEditing={isEditing} 
-              darkTheme={true}
-              className="min-w-[60px]"
-              placeholder="年龄/性别"
-            />
-            <span>|</span>
-            <div className="flex items-center gap-1">
-              <span className="shrink-0 text-white/60">期望薪资:</span>
-              <EditableField 
-                value={resume.basics.salary} 
-                onChange={(v) => updateBasic("salary", v)} 
-                isEditing={isEditing} 
-                darkTheme={true}
-                className="min-w-[60px]"
-                placeholder="薪资范围"
-              />
-            </div>
+          <div className="flex flex-col items-center gap-2 text-sm w-full opacity-90">
+             <div className="flex items-center gap-2">
+                <EditableField 
+                  value={data.basics.experience} 
+                  onChange={(val: string) => setData({...data, basics: {...data.basics, experience: val}})}
+                  isEditing={isEditing}
+                  darkTheme={true}
+                  placeholder="年龄 | 经验"
+                />
+             </div>
+             <div className="flex items-center gap-2">
+                <EditableField 
+                  value={data.basics.salary} 
+                  onChange={(val: string) => setData({...data, basics: {...data.basics, salary: val}})}
+                  isEditing={isEditing}
+                  darkTheme={true}
+                  placeholder="期望薪资"
+                />
+             </div>
           </div>
         </div>
 
-        <div className="w-full h-px bg-white/10 my-2"></div>
+        <div className="w-full h-px bg-white/10" />
 
         {/* Contact Info */}
-        <div className="space-y-4 text-sm">
+        <div className="flex flex-col gap-4 text-sm">
           <div className="flex items-center gap-3">
-            <Phone className={`w-4 h-4 ${accentText} shrink-0`} />
+            <Phone size={16} className={getThemeClass('text')} />
             <EditableField 
-              value={resume.basics.phone} 
-              onChange={(v) => updateBasic("phone", v)} 
-              isEditing={isEditing} 
+              value={data.basics.phone} 
+              onChange={(val: string) => setData({...data, basics: {...data.basics, phone: val}})}
+              isEditing={isEditing}
               darkTheme={true}
               placeholder="电话号码"
             />
           </div>
           <div className="flex items-center gap-3">
-            <Mail className={`w-4 h-4 ${accentText} shrink-0`} />
+            <Mail size={16} className={getThemeClass('text')} />
             <EditableField 
-              value={resume.basics.email} 
-              onChange={(v) => updateBasic("email", v)} 
-              isEditing={isEditing} 
+              value={data.basics.email} 
+              onChange={(val: string) => setData({...data, basics: {...data.basics, email: val}})}
+              isEditing={isEditing}
               darkTheme={true}
               placeholder="电子邮箱"
             />
           </div>
           <div className="flex items-center gap-3">
-            <MapPin className={`w-4 h-4 ${accentText} shrink-0`} />
-            <div className="flex gap-1 w-full">
-              <span className="shrink-0">期望城市：</span>
-              <EditableField 
-                value={resume.basics.location} 
-                onChange={(v) => updateBasic("location", v)} 
-                isEditing={isEditing} 
-                darkTheme={true}
-                placeholder="城市"
-              />
-            </div>
+            <MapPin size={16} className={getThemeClass('text')} />
+            <EditableField 
+              value={data.basics.location} 
+              onChange={(val: string) => setData({...data, basics: {...data.basics, location: val}})}
+              isEditing={isEditing}
+              darkTheme={true}
+              placeholder="所在城市"
+            />
           </div>
         </div>
 
+        <div className="w-full h-px bg-white/10" />
+
         {/* Education */}
-        <div className="relative group/section">
-          <h2 className={`text-white text-lg font-bold border-b border-white/10 pb-2 mb-4 flex items-center gap-2`}>
-            <GraduationCap className={`w-5 h-5 ${accentText}`} />
-            教育经历
-          </h2>
-          <div className="space-y-6">
-            {resume.education.map((edu, idx) => (
-              <div key={idx} className="space-y-1 relative group/item hover:bg-white/5 p-2 -m-2 rounded transition-colors">
-                {isEditing && <DeleteButton onClick={() => removeEducation(idx)} className="absolute top-2 right-2" />}
+        <div>
+          <h3 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+            <GraduationCap size={20} /> 教育经历
+          </h3>
+          <div className="flex flex-col gap-6">
+            {data.education.map((edu, index) => (
+              <div key={index} className="relative group">
+                {isEditing && (
+                  <div className="absolute -right-2 top-0">
+                     <DeleteButton onClick={() => {
+                        const newEdu = [...data.education];
+                        newEdu.splice(index, 1);
+                        setData({...data, education: newEdu});
+                     }} />
+                  </div>
+                )}
                 <EditableField 
                   value={edu.institution} 
-                  onChange={(v) => updateEducation(idx, "institution", v)} 
-                  isEditing={isEditing} 
+                  onChange={(val: string) => {
+                    const newEdu = [...data.education];
+                    newEdu[index].institution = val;
+                    setData({...data, education: newEdu});
+                  }}
+                  isEditing={isEditing}
                   darkTheme={true}
-                  className="text-white font-medium block"
+                  className="font-bold text-base block text-white"
                   placeholder="学校名称"
                 />
-                <div className="flex gap-2 text-slate-400 text-sm">
-                  <EditableField 
-                    value={edu.major} 
-                    onChange={(v) => updateEducation(idx, "major", v)} 
-                    isEditing={isEditing} 
-                    darkTheme={true}
-                    placeholder="专业"
-                  />
-                  <span>|</span>
-                  <EditableField 
-                    value={edu.degree} 
-                    onChange={(v) => updateEducation(idx, "degree", v)} 
-                    isEditing={isEditing} 
-                    darkTheme={true}
-                    placeholder="学历"
-                  />
+                <div className="flex justify-between text-sm mt-1 text-white/70">
+                   <div className="flex gap-2">
+                      <EditableField 
+                        value={edu.major} 
+                        onChange={(val: string) => {
+                          const newEdu = [...data.education];
+                          newEdu[index].major = val;
+                          setData({...data, education: newEdu});
+                        }}
+                        isEditing={isEditing}
+                        darkTheme={true}
+                        placeholder="专业"
+                      />
+                       <span>|</span>
+                      <EditableField 
+                        value={edu.degree} 
+                        onChange={(val: string) => {
+                          const newEdu = [...data.education];
+                          newEdu[index].degree = val;
+                          setData({...data, education: newEdu});
+                        }}
+                        isEditing={isEditing}
+                        darkTheme={true}
+                        placeholder="学位"
+                      />
+                   </div>
                 </div>
-                <div className="flex gap-1 text-slate-500 text-xs">
-                  <EditableField 
-                    value={edu.start} 
-                    onChange={(v) => updateEducation(idx, "start", v)} 
-                    isEditing={isEditing} 
-                    darkTheme={true}
-                    placeholder="开始"
-                  />
-                  <span>-</span>
-                  <EditableField 
-                    value={edu.end} 
-                    onChange={(v) => updateEducation(idx, "end", v)} 
-                    isEditing={isEditing} 
-                    darkTheme={true}
-                    placeholder="结束"
-                  />
+                <div className="text-xs mt-1 opacity-60">
+                   <span className="flex gap-1">
+                    <EditableField 
+                        value={edu.start} 
+                        onChange={(val: string) => {
+                          const newEdu = [...data.education];
+                          newEdu[index].start = val;
+                          setData({...data, education: newEdu});
+                        }}
+                        isEditing={isEditing}
+                        darkTheme={true}
+                        placeholder="开始年份"
+                      />
+                      -
+                      <EditableField 
+                        value={edu.end} 
+                        onChange={(val: string) => {
+                          const newEdu = [...data.education];
+                          newEdu[index].end = val;
+                          setData({...data, education: newEdu});
+                        }}
+                        isEditing={isEditing}
+                        darkTheme={true}
+                        placeholder="结束年份"
+                      />
+                   </span>
                 </div>
               </div>
             ))}
+            <SectionControls 
+              isEditing={isEditing} 
+              onAdd={() => setData({...data, education: [...data.education, { institution: "学校名称", major: "专业", degree: "学位", start: "20xx", end: "20xx" }]})} 
+              label="教育经历"
+              darkTheme={true}
+            />
           </div>
-          <SectionControls onAdd={addEducation} label="教育经历" isEditing={isEditing} darkTheme={true} />
         </div>
+
+        <div className="w-full h-px bg-white/10" />
 
         {/* Skills */}
         <div>
-          <h2 className={`text-white text-lg font-bold border-b border-white/10 pb-2 mb-4 flex items-center gap-2`}>
-            <Code className={`w-5 h-5 ${accentText}`} />
-            专业技能
-          </h2>
-          <div className="space-y-4 text-sm">
-            {[
-              { key: "languages", label: "开发语言" },
-              { key: "frontend", label: "前端/移动端" },
-              { key: "backend", label: "后端/数据库" },
-              { key: "hardware", label: "硬件/嵌入式" }
-            ].map((cat) => (
-              <div key={cat.key} className="relative group/section">
-                <span className={`${accentText} font-semibold block mb-1`}>{cat.label}</span>
-                <div className="flex flex-wrap gap-1">
-                  {resume.skills[cat.key].map((skill, idx) => (
-                    <div key={idx} className="relative group/item flex items-center bg-white/5 rounded px-2 py-0.5">
-                      <EditableField 
-                        value={skill} 
-                        onChange={(v) => updateSkills(cat.key, idx, v)} 
-                        isEditing={isEditing} 
-                        darkTheme={true}
-                        className="mr-1"
-                      />
-                       {isEditing && (
-                         <span className="text-slate-500 cursor-pointer hover:text-red-400 ml-1" onClick={() => removeSkill(cat.key, idx)}><X size={12}/></span>
-                       )}
-                    </div>
+          <h3 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+            <Code size={20} /> 专业技能
+          </h3>
+          <div className="flex flex-col gap-4">
+            {Object.entries(data.skills).map(([category, items]) => (
+              <div key={category} className="mb-2">
+                <h4 className={`text-sm font-bold mb-2 uppercase opacity-80 ${getThemeClass('text')}`}>
+                  {category === 'languages' ? '开发语言' : 
+                   category === 'frontend' ? '前端/移动端' : 
+                   category === 'backend' ? '后端/数据库' :
+                   category === 'hardware' ? '硬件/嵌入式' : '其他工具'}
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {items.map((skill, idx) => (
+                    <span key={idx} className="relative group inline-block">
+                      <span className="bg-white/10 px-2 py-1 rounded text-xs text-slate-200 border border-white/5">
+                        <EditableField 
+                           value={skill}
+                           onChange={(val: string) => {
+                             const newSkills = {...data.skills};
+                             newSkills[category][idx] = val;
+                             setData({...data, skills: newSkills});
+                           }}
+                           isEditing={isEditing}
+                           darkTheme={true}
+                        />
+                      </span>
+                      {isEditing && (
+                        <button 
+                          onClick={() => {
+                             const newSkills = {...data.skills};
+                             newSkills[category] = items.filter((_, i) => i !== idx);
+                             setData({...data, skills: newSkills});
+                          }}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={8} />
+                        </button>
+                      )}
+                    </span>
                   ))}
+                  {isEditing && (
+                    <button 
+                      onClick={() => {
+                        const newSkills = {...data.skills};
+                        newSkills[category] = [...items, "New Skill"];
+                        setData({...data, skills: newSkills});
+                      }}
+                      className="bg-white/5 px-2 py-1 rounded text-xs text-white/50 border border-dashed border-white/20 hover:text-white hover:border-white/50 transition-colors"
+                    >
+                      +
+                    </button>
+                  )}
                 </div>
-                <SectionControls onAdd={() => addSkill(cat.key)} label="技能" isEditing={isEditing} darkTheme={true} />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Certificates */}
-        <div className="relative group/section">
-          <h2 className={`text-white text-lg font-bold border-b border-white/10 pb-2 mb-4 flex items-center gap-2`}>
-            <Award className={`w-5 h-5 ${accentText}`} />
-            资格证书
-          </h2>
-          <ul className="text-sm space-y-2 text-slate-300">
-            {resume.certificates.map((cert, idx) => (
-              <li key={idx} className="relative group/item flex items-start gap-2">
-                 {isEditing ? (
-                   <div className="flex items-center w-full gap-2">
-                     <button onClick={() => removeCertificate(idx)} className="text-red-400 hover:text-red-500 shrink-0"><X size={14}/></button>
-                     <EditableField 
-                      value={cert} 
-                      onChange={(v) => updateCertificate(idx, v)} 
-                      isEditing={isEditing} 
-                      darkTheme={true}
-                      className="w-full"
-                    />
+        <div className="w-full h-px bg-white/10" />
+
+         {/* Certificates */}
+         <div>
+          <h3 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+            <Award size={20} /> 资格证书
+          </h3>
+          <ul className="flex flex-col gap-2">
+            {data.certificates.map((cert, index) => (
+              <li key={index} className="text-sm text-slate-300 relative group flex items-start gap-2">
+                 <span className={`mt-1.5 w-1.5 h-1.5 rounded-full ${getThemeClass('bg').replace('bg-', 'bg-') === 'bg-slate-900' ? 'bg-white/40' : 'bg-white/40'}`}></span>
+                 <EditableField 
+                    value={cert}
+                    onChange={(val: string) => {
+                       const newCerts = [...data.certificates];
+                       newCerts[index] = val;
+                       setData({...data, certificates: newCerts});
+                    }}
+                    isEditing={isEditing}
+                    darkTheme={true}
+                 />
+                 {isEditing && (
+                   <div className="ml-auto">
+                    <DeleteButton onClick={() => {
+                       const newCerts = [...data.certificates];
+                       newCerts.splice(index, 1);
+                       setData({...data, certificates: newCerts});
+                    }} />
                    </div>
-                 ) : (
-                   <>
-                    <span className={`${accentText} mt-1`}>•</span>
-                    <span>{cert}</span>
-                   </>
                  )}
               </li>
             ))}
+            <SectionControls 
+              isEditing={isEditing} 
+              onAdd={() => setData({...data, certificates: [...data.certificates, "新证书"]})} 
+              label="证书"
+              darkTheme={true}
+            />
           </ul>
-          <SectionControls onAdd={addCertificate} label="证书" isEditing={isEditing} darkTheme={true} />
         </div>
       </div>
 
-      {/* Right Main Content */}
-      <div className="w-full md:w-2/3 print:w-2/3 p-8 md:p-12 text-slate-800 print:p-8 bg-white">
+      {/* Main Content - Light Theme */}
+      <div className="w-full md:w-2/3 print:w-2/3 p-10 text-slate-800">
         
-        {/* Summary */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 border-b-2 border-slate-200 pb-2 mb-4 flex items-center gap-2">
-            <User className="w-6 h-6 text-slate-700" />
-            个人优势
+        {/* Summary Section */}
+        <section className="mb-10">
+          <h2 className="flex items-center gap-3 text-2xl font-bold text-slate-800 mb-6 border-b-2 border-slate-100 pb-2">
+            <User className={getThemeClass('text')} /> 个人优势
           </h2>
-          <EditableField 
-            value={resume.basics.summary} 
-            onChange={(v) => updateBasic("summary", v)} 
-            isEditing={isEditing} 
-            multiline={true}
-            className="leading-relaxed text-slate-600 text-sm text-justify w-full"
-            placeholder="请填写个人简介..."
-          />
+          <div className="text-sm leading-relaxed text-slate-600">
+            <EditableField 
+               value={data.basics.summary} 
+               onChange={(val: string) => setData({...data, basics: {...data.basics, summary: val}})}
+               isEditing={isEditing}
+               multiline={true}
+               className="w-full block"
+               placeholder="个人简介..."
+            />
+          </div>
         </section>
 
-        {/* Experience / Projects */}
-        <section className="relative group/section">
-          <h2 className="text-2xl font-bold text-slate-900 border-b-2 border-slate-200 pb-2 mb-6 flex items-center gap-2">
-            <Briefcase className="w-6 h-6 text-slate-700" />
-            项目经历
+        {/* Projects Section */}
+        <section>
+          <h2 className="flex items-center gap-3 text-2xl font-bold text-slate-800 mb-6 border-b-2 border-slate-100 pb-2">
+            <Briefcase className={getThemeClass('text')} /> 项目经历
           </h2>
           
-          <div className="space-y-8">
-            {isEditing && (
-               <button 
-                onClick={addProject}
-                className="w-full py-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-500 font-bold hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 mb-4"
-              >
-                <Plus size={20} /> 添加新项目
-              </button>
-            )}
-
-            {resume.projects.map((project, idx) => (
-              <div key={idx} className="break-inside-avoid relative group/item transition-all p-2 -m-2 rounded hover:bg-slate-50">
-                {isEditing && (
-                  <div className="absolute right-0 top-0 flex gap-2">
-                    <button 
-                      onClick={() => removeProject(idx)}
-                      className="p-2 bg-white text-red-500 border border-red-200 rounded-full shadow-sm hover:bg-red-50"
-                      title="删除项目"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+          <div className="flex flex-col space-y-5">
+            {data.projects.map((project, index) => (
+              <div key={index} className="relative group border-l-2 border-slate-100 pl-4 hover:border-slate-200 transition-colors">
+                 {isEditing && (
+                  <div className="absolute right-0 top-0 flex gap-1 bg-white p-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                     <MoveButton 
+                        onClick={() => moveProject(index, 'up')} 
+                        direction="up" 
+                        disabled={index === 0} 
+                     />
+                     <MoveButton 
+                        onClick={() => moveProject(index, 'down')} 
+                        direction="down" 
+                        disabled={index === data.projects.length - 1} 
+                     />
+                     <DeleteButton onClick={() => {
+                        const newProjects = [...data.projects];
+                        newProjects.splice(index, 1);
+                        setData({...data, projects: newProjects});
+                     }} />
                   </div>
                 )}
-                
-                <div className="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2 gap-2">
-                  <EditableField 
-                    value={project.name} 
-                    onChange={(v) => updateProject(idx, "name", v)} 
-                    isEditing={isEditing} 
-                    className="text-lg font-bold text-slate-800"
-                    placeholder="项目名称"
-                  />
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-medium shrink-0">
-                    <div className="bg-slate-100 px-2 py-0.5 rounded text-slate-600">
-                      <EditableField 
-                        value={project.role} 
-                        onChange={(v) => updateProject(idx, "role", v)} 
-                        isEditing={isEditing} 
-                        placeholder="角色"
-                        className="text-center min-w-[40px]"
-                      />
-                    </div>
-                    <span className="flex items-center gap-1">
-                      <Calendar size={12}/> 
-                      <EditableField 
-                        value={project.date} 
-                        onChange={(v) => updateProject(idx, "date", v)} 
-                        isEditing={isEditing} 
-                        placeholder="时间段"
-                        className="min-w-[100px]"
-                      />
-                    </span>
+                <div className="flex justify-between items-baseline mb-1">
+                  <h3 className="text-xl font-bold text-slate-800">
+                     <EditableField 
+                        value={project.name}
+                        onChange={(val: string) => {
+                           const newProjects = [...data.projects];
+                           newProjects[index].name = val;
+                           setData({...data, projects: newProjects});
+                        }}
+                        isEditing={isEditing}
+                        placeholder="项目名称"
+                     />
+                  </h3>
+                  <div className="text-sm font-medium text-slate-500 font-mono">
+                     <EditableField 
+                        value={project.date}
+                        onChange={(val: string) => {
+                           const newProjects = [...data.projects];
+                           newProjects[index].date = val;
+                           setData({...data, projects: newProjects});
+                        }}
+                        isEditing={isEditing}
+                        placeholder="时间"
+                     />
                   </div>
                 </div>
                 
                 <div className="mb-2">
-                  <EditableField 
-                    value={project.desc} 
-                    onChange={(v) => updateProject(idx, "desc", v)} 
-                    isEditing={isEditing} 
-                    multiline={true}
-                    className="text-sm font-medium text-slate-700 w-full"
-                    placeholder="项目简述"
-                  />
+                   <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded ${getThemeClass('bg').replace('bg-slate-900', 'bg-slate-100')} ${getThemeClass('text')}`}>
+                      <EditableField 
+                        value={project.role}
+                        onChange={(val: string) => {
+                           const newProjects = [...data.projects];
+                           newProjects[index].role = val;
+                           setData({...data, projects: newProjects});
+                        }}
+                        isEditing={isEditing}
+                        placeholder="担任角色"
+                     />
+                   </span>
                 </div>
-                
-                {/* Project Details List */}
-                {project.details && (
-                  <ul className="list-disc list-outside ml-4 text-sm text-slate-600 space-y-1">
-                    {project.details.map((detail, dIdx) => (
-                      <li key={dIdx} className="pl-1 relative group/detail">
-                        <div className="flex items-start gap-2">
-                           {isEditing && (
-                             <button onClick={() => removeProjectDetail(idx, dIdx)} className="text-red-400 mt-1 hover:text-red-600 shrink-0"><X size={12}/></button>
-                           )}
-                           <EditableField 
-                              value={detail} 
-                              onChange={(v) => updateProjectDetail(idx, dIdx, v)} 
-                              isEditing={isEditing} 
-                              multiline={true}
-                              className="w-full"
-                              placeholder="详细条目"
-                            />
-                        </div>
-                      </li>
-                    ))}
-                    {isEditing && (
-                       <li className="list-none -ml-4 mt-2">
-                         <button onClick={() => addProjectDetail(idx)} className="text-xs text-blue-500 hover:underline flex items-center gap-1">
-                           <Plus size={12} /> 添加详情
-                         </button>
-                       </li>
-                    )}
-                  </ul>
-                )}
+
+                <div className="text-sm text-slate-600 mb-2 italic">
+                   <EditableField 
+                        value={project.desc}
+                        onChange={(val: string) => {
+                           const newProjects = [...data.projects];
+                           newProjects[index].desc = val;
+                           setData({...data, projects: newProjects});
+                        }}
+                        isEditing={isEditing}
+                        multiline={true}
+                        placeholder="项目描述"
+                     />
+                </div>
+
+                <ul className="text-sm text-slate-600 list-disc list-outside ml-4 space-y-1">
+                  {(project.details || []).map((detail, dIdx) => (
+                    <li key={dIdx} className="relative group">
+                       <EditableField 
+                        value={detail}
+                        onChange={(val: string) => {
+                           const newProjects = [...data.projects];
+                           newProjects[index].details[dIdx] = val;
+                           setData({...data, projects: newProjects});
+                        }}
+                        isEditing={isEditing}
+                        multiline={true}
+                        placeholder="项目详情"
+                     />
+                     {isEditing && (
+                        <button 
+                           onClick={() => {
+                              const newProjects = [...data.projects];
+                              newProjects[index].details = project.details.filter((_, i) => i !== dIdx);
+                              setData({...data, projects: newProjects});
+                           }}
+                           className="absolute -left-5 top-1 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600"
+                        >
+                           <X size={12} />
+                        </button>
+                     )}
+                    </li>
+                  ))}
+                  {isEditing && (
+                     <button 
+                        onClick={() => {
+                           const newProjects = [...data.projects];
+                           if(!newProjects[index].details) newProjects[index].details = [];
+                           newProjects[index].details.push("新项目详情");
+                           setData({...data, projects: newProjects});
+                        }}
+                        className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 mt-1"
+                     >
+                        <Plus size={12} /> 添加详情
+                     </button>
+                  )}
+                </ul>
               </div>
             ))}
+            <SectionControls 
+              isEditing={isEditing} 
+              onAdd={() => setData({...data, projects: [...data.projects, {
+                 name: "新项目",
+                 role: "角色",
+                 date: "20xx.xx",
+                 desc: "项目简述",
+                 details: ["项目详情"]
+              }]})} 
+              label="项目经历"
+            />
           </div>
         </section>
       </div>
@@ -600,536 +751,661 @@ const ModernTemplate = ({ resume, isEditing, updateBasic, updateEducation, updat
   );
 };
 
-// 2. Classic Professional Template
-const ClassicTemplate = ({ resume, isEditing, updateBasic, updateEducation, updateSkills, updateCertificate, updateProject, updateProjectDetail, addEducation, removeEducation, addSkill, removeSkill, addCertificate, removeCertificate, addProject, removeProject, addProjectDetail, removeProjectDetail, themeColor }) => {
-  const textColors = {
-    blue: "text-blue-800",
-    emerald: "text-emerald-800",
-    violet: "text-violet-800",
-    slate: "text-slate-800",
-    rose: "text-rose-800"
-  };
-  const borderColors = {
-    blue: "border-blue-800",
-    emerald: "border-emerald-800",
-    violet: "border-violet-800",
-    slate: "border-slate-800",
-    rose: "border-rose-800"
-  };
+const ClassicTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
+  data: ResumeData;
+  setData: (data: ResumeData) => void;
+  isEditing: boolean;
+  themeColor: string;
+  moveProject: (index: number, direction: 'up' | 'down') => void;
+}) => {
+   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const themeText = textColors[themeColor] || textColors.blue;
-  const themeBorder = borderColors[themeColor] || borderColors.blue;
+   const handleImageUpload = (e: any) => {
+     const file = e.target.files[0];
+     if (file) {
+       const reader = new FileReader();
+       reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setData({ ...data, basics: { ...data.basics, avatar: reader.result } });
+        }
+       };
+       reader.readAsDataURL(file);
+     }
+   };
+ 
+   const getThemeClass = (type: string) => {
+     const colors: any = {
+       blue: { text: "text-blue-700", border: "border-blue-700", bg: "bg-blue-50" },
+       emerald: { text: "text-emerald-700", border: "border-emerald-700", bg: "bg-emerald-50" },
+       violet: { text: "text-violet-700", border: "border-violet-700", bg: "bg-violet-50" },
+       slate: { text: "text-slate-700", border: "border-slate-700", bg: "bg-slate-50" },
+       rose: { text: "text-rose-700", border: "border-rose-700", bg: "bg-rose-50" },
+     };
+     return colors[themeColor]?.[type] || colors.blue[type];
+   };
 
-  return (
-    <div className="p-12 h-full min-h-[297mm] bg-white text-slate-800 flex flex-col gap-6">
-      
-      {/* Header */}
-      <header className={`border-b-4 ${themeBorder} pb-6 flex items-center gap-6`}>
-        <AvatarUpload 
-          avatar={resume.basics.avatar} 
-          name={resume.basics.name} 
-          onChange={(v) => updateBasic("avatar", v)} 
-          isEditing={isEditing} 
-        />
-        <div className="flex-1">
-          <EditableField 
-            value={resume.basics.name} 
-            onChange={(v) => updateBasic("name", v)} 
-            isEditing={isEditing} 
-            className={`text-4xl font-bold ${themeText} uppercase tracking-wider mb-2 block`}
-            placeholder="姓名"
-          />
-          <EditableField 
-            value={resume.basics.title} 
-            onChange={(v) => updateBasic("title", v)} 
-            isEditing={isEditing} 
-            className="text-xl text-slate-600 font-medium block mb-3"
-            placeholder="职位"
-          />
-          
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600">
-            <div className="flex items-center gap-2">
-               <Phone size={14} />
-               <EditableField value={resume.basics.phone} onChange={(v) => updateBasic("phone", v)} isEditing={isEditing} placeholder="电话" />
+   return (
+      <div className="w-full min-h-[1123px] bg-white shadow-xl print:shadow-none p-12 text-slate-800 flex flex-col gap-6">
+         {/* Header */}
+         <div className={`flex items-start justify-between border-b-4 ${getThemeClass('border')} pb-6`}>
+            <div className="flex-1">
+               <h1 className="text-4xl font-bold mb-2 tracking-tight">
+                  <EditableField 
+                     value={data.basics.name}
+                     onChange={(val: string) => setData({...data, basics: {...data.basics, name: val}})}
+                     isEditing={isEditing}
+                     placeholder="您的姓名"
+                  />
+               </h1>
+               <div className={`text-xl ${getThemeClass('text')} font-medium mb-4`}>
+                  <EditableField 
+                     value={data.basics.title}
+                     onChange={(val: string) => setData({...data, basics: {...data.basics, title: val}})}
+                     isEditing={isEditing}
+                     placeholder="职位头衔"
+                  />
+               </div>
+               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600">
+                  <div className="flex items-center gap-1">
+                     <Phone size={14} />
+                     <EditableField 
+                        value={data.basics.phone}
+                        onChange={(val: string) => setData({...data, basics: {...data.basics, phone: val}})}
+                        isEditing={isEditing}
+                        placeholder="电话"
+                     />
+                  </div>
+                  <div className="flex items-center gap-1">
+                     <Mail size={14} />
+                     <EditableField 
+                        value={data.basics.email}
+                        onChange={(val: string) => setData({...data, basics: {...data.basics, email: val}})}
+                        isEditing={isEditing}
+                        placeholder="邮箱"
+                     />
+                  </div>
+                  <div className="flex items-center gap-1">
+                     <MapPin size={14} />
+                     <EditableField 
+                        value={data.basics.location}
+                        onChange={(val: string) => setData({...data, basics: {...data.basics, location: val}})}
+                        isEditing={isEditing}
+                        placeholder="地点"
+                     />
+                  </div>
+                  <div className="flex items-center gap-1">
+                     <User size={14} />
+                     <EditableField 
+                        value={data.basics.experience}
+                        onChange={(val: string) => setData({...data, basics: {...data.basics, experience: val}})}
+                        isEditing={isEditing}
+                        placeholder="经验"
+                     />
+                  </div>
+                  <div className="flex items-center gap-1">
+                     <span className="font-bold">¥</span>
+                     <EditableField 
+                        value={data.basics.salary}
+                        onChange={(val: string) => setData({...data, basics: {...data.basics, salary: val}})}
+                        isEditing={isEditing}
+                        placeholder="期望薪资"
+                     />
+                  </div>
+               </div>
             </div>
-            <div className="flex items-center gap-2">
-               <Mail size={14} />
-               <EditableField value={resume.basics.email} onChange={(v) => updateBasic("email", v)} isEditing={isEditing} placeholder="邮箱" />
+            <div className="relative group w-24 h-24 shrink-0 ml-6">
+                <div className="w-full h-full bg-slate-100 rounded overflow-hidden">
+                   {data.basics.avatar ? (
+                      <img src={data.basics.avatar} alt="Profile" className="w-full h-full object-cover" />
+                   ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-300">
+                         <User size={32} />
+                      </div>
+                   )}
+                </div>
+                {isEditing && (
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded cursor-pointer text-white"
+                  >
+                    <Upload size={16} />
+                  </button>
+                )}
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
             </div>
-             <div className="flex items-center gap-2">
-               <MapPin size={14} />
-               <EditableField value={resume.basics.location} onChange={(v) => updateBasic("location", v)} isEditing={isEditing} placeholder="地点" />
-            </div>
-             <div className="flex items-center gap-2">
-               <span className="font-semibold">期望薪资:</span>
-               <EditableField value={resume.basics.salary} onChange={(v) => updateBasic("salary", v)} isEditing={isEditing} placeholder="薪资" />
-            </div>
-             <div className="flex items-center gap-2">
-               <User size={14} />
-               <EditableField value={resume.basics.experience} onChange={(v) => updateBasic("experience", v)} isEditing={isEditing} placeholder="经验" />
-            </div>
-          </div>
-        </div>
-      </header>
+         </div>
 
-      {/* Summary */}
-      <section>
-        <h3 className={`text-lg font-bold uppercase tracking-widest ${themeText} border-b border-slate-200 mb-3 pb-1`}>个人优势</h3>
-        <EditableField 
-          value={resume.basics.summary} 
-          onChange={(v) => updateBasic("summary", v)} 
-          isEditing={isEditing} 
-          multiline={true}
-          className="text-slate-700 leading-relaxed text-sm"
-          placeholder="个人简介..."
-        />
-      </section>
+         {/* Three Column Grid for Meta Info */}
+         <div className="grid grid-cols-1 md:grid-cols-3 print:grid-cols-3 gap-6">
+            
+            {/* Education */}
+            <div className="col-span-2">
+               <h2 className={`text-lg font-bold uppercase tracking-wider mb-3 ${getThemeClass('text')} border-b pb-1`}>教育背景</h2>
+               <div className="flex flex-col gap-4">
+                  {data.education.map((edu, index) => (
+                     <div key={index} className="relative group">
+                        {isEditing && (
+                           <div className="absolute -left-6 top-0">
+                              <DeleteButton onClick={() => {
+                                 const newEdu = [...data.education];
+                                 newEdu.splice(index, 1);
+                                 setData({...data, education: newEdu});
+                              }} />
+                           </div>
+                        )}
+                        <div className="flex justify-between font-bold text-slate-800">
+                           <EditableField 
+                              value={edu.institution}
+                              onChange={(val: string) => {
+                                 const newEdu = [...data.education];
+                                 newEdu[index].institution = val;
+                                 setData({...data, education: newEdu});
+                              }}
+                              isEditing={isEditing}
+                              placeholder="学校"
+                           />
+                           <div className="text-sm font-normal text-slate-500 whitespace-nowrap">
+                              <EditableField 
+                                 value={edu.start}
+                                 onChange={(val: string) => {
+                                    const newEdu = [...data.education];
+                                    newEdu[index].start = val;
+                                    setData({...data, education: newEdu});
+                                 }}
+                                 isEditing={isEditing}
+                                 placeholder="开始"
+                              /> - <EditableField 
+                                 value={edu.end}
+                                 onChange={(val: string) => {
+                                    const newEdu = [...data.education];
+                                    newEdu[index].end = val;
+                                    setData({...data, education: newEdu});
+                                 }}
+                                 isEditing={isEditing}
+                                 placeholder="结束"
+                              />
+                           </div>
+                        </div>
+                        <div className="flex gap-2 text-sm text-slate-600">
+                           <EditableField 
+                              value={edu.major}
+                              onChange={(val: string) => {
+                                 const newEdu = [...data.education];
+                                 newEdu[index].major = val;
+                                 setData({...data, education: newEdu});
+                              }}
+                              isEditing={isEditing}
+                              placeholder="主修专业"
+                           />
+                           <span>•</span>
+                           <EditableField 
+                              value={edu.degree}
+                              onChange={(val: string) => {
+                                 const newEdu = [...data.education];
+                                 newEdu[index].degree = val;
+                                 setData({...data, education: newEdu});
+                              }}
+                              isEditing={isEditing}
+                              placeholder="学位"
+                           />
+                        </div>
+                     </div>
+                  ))}
+                  <SectionControls 
+                     isEditing={isEditing} 
+                     onAdd={() => setData({...data, education: [...data.education, { institution: "学校名称", major: "主修专业", degree: "学位", start: "20xx", end: "20xx" }]})} 
+                     label="教育经历"
+                  />
+               </div>
+            </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 print:grid-cols-3 gap-8">
-        {/* Main Column */}
-        <div className="md:col-span-2 print:col-span-2 space-y-6">
-           {/* Experience */}
-           <section>
-              <h3 className={`text-lg font-bold uppercase tracking-widest ${themeText} border-b border-slate-200 mb-4 pb-1 flex justify-between items-center`}>
-                项目经历
-                <SectionControls onAdd={addProject} label="项目" isEditing={isEditing} />
-              </h3>
-              <div className="space-y-6">
-                {resume.projects.map((project, idx) => (
-                  <div key={idx} className="relative group/item break-inside-avoid">
-                    {isEditing && <DeleteButton onClick={() => removeProject(idx)} className="absolute -right-8 top-0" />}
-                    <div className="flex justify-between items-baseline mb-1">
-                      <EditableField value={project.name} onChange={(v) => updateProject(idx, "name", v)} isEditing={isEditing} className="font-bold text-slate-800 text-lg" placeholder="项目名称" />
-                      <EditableField value={project.date} onChange={(v) => updateProject(idx, "date", v)} isEditing={isEditing} className="text-sm text-slate-500" placeholder="时间" />
-                    </div>
-                    <div className="flex items-center gap-2 mb-2 text-sm">
-                       <span className="font-semibold text-slate-600">角色:</span>
-                       <EditableField value={project.role} onChange={(v) => updateProject(idx, "role", v)} isEditing={isEditing} placeholder="角色" />
-                    </div>
-                    <EditableField value={project.desc} onChange={(v) => updateProject(idx, "desc", v)} isEditing={isEditing} multiline={true} className="text-sm text-slate-700 mb-2 italic" placeholder="描述" />
-                    
-                     {project.details && (
-                      <ul className="list-disc list-outside ml-4 text-sm text-slate-600 space-y-1">
-                        {project.details.map((detail, dIdx) => (
-                          <li key={dIdx} className="pl-1 relative group/detail">
-                             <div className="flex items-start gap-2">
-                               {isEditing && <button onClick={() => removeProjectDetail(idx, dIdx)} className="text-red-400 hover:text-red-600 shrink-0"><X size={12}/></button>}
-                               <EditableField value={detail} onChange={(v) => updateProjectDetail(idx, dIdx, v)} isEditing={isEditing} multiline={true} className="w-full" />
-                             </div>
-                          </li>
+            {/* Certificates */}
+            <div className="col-span-1">
+               <h2 className={`text-lg font-bold uppercase tracking-wider mb-3 ${getThemeClass('text')} border-b pb-1`}>证书</h2>
+               <ul className="text-sm text-slate-600 flex flex-col gap-1.5">
+                  {data.certificates.map((cert, index) => (
+                     <li key={index} className="relative group pl-3">
+                        <span className={`absolute left-0 top-2 w-1 h-1 rounded-full ${getThemeClass('bg').replace('bg-', 'bg-') === 'bg-slate-50' ? 'bg-slate-400' : 'bg-slate-400'}`}></span>
+                        <div className="flex justify-between items-start">
+                           <EditableField 
+                              value={cert}
+                              onChange={(val: string) => {
+                                 const newCerts = [...data.certificates];
+                                 newCerts[index] = val;
+                                 setData({...data, certificates: newCerts});
+                              }}
+                              isEditing={isEditing}
+                              multiline={true}
+                              placeholder="证书名称"
+                           />
+                           {isEditing && <DeleteButton onClick={() => {
+                              const newCerts = [...data.certificates];
+                              newCerts.splice(index, 1);
+                              setData({...data, certificates: newCerts});
+                           }} />}
+                        </div>
+                     </li>
+                  ))}
+                  <SectionControls 
+                     isEditing={isEditing} 
+                     onAdd={() => setData({...data, certificates: [...data.certificates, "新证书"]})} 
+                     label="证书"
+                  />
+               </ul>
+            </div>
+         </div>
+
+         {/* Skills Section - Full Width Tag Cloud */}
+         <div>
+            <h2 className={`text-lg font-bold uppercase tracking-wider mb-3 ${getThemeClass('text')} border-b pb-1`}>专业技能</h2>
+            <div className="flex flex-wrap gap-4">
+                {Object.entries(data.skills).map(([category, items]) => (
+                   <div key={category} className="flex-1 min-w-[200px]">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">{
+                         category === 'languages' ? '语言' : 
+                         category === 'frontend' ? '前端' : 
+                         category === 'backend' ? '后端' :
+                         category === 'hardware' ? '硬件' : '其他'
+                      }</h4>
+                      <div className="flex flex-col gap-1">
+                         {items.map((skill, idx) => (
+                            <div key={idx} className="relative group text-sm text-slate-700">
+                               <EditableField 
+                                 value={skill}
+                                 onChange={(val: string) => {
+                                    const newSkills = {...data.skills};
+                                    newSkills[category][idx] = val;
+                                    setData({...data, skills: newSkills});
+                                 }}
+                                 isEditing={isEditing}
+                                 className="border-b border-transparent hover:border-slate-300"
+                               />
+                               {isEditing && (
+                                 <button 
+                                    onClick={() => {
+                                       const newSkills = {...data.skills};
+                                       newSkills[category] = items.filter((_, i) => i !== idx);
+                                       setData({...data, skills: newSkills});
+                                    }}
+                                    className="absolute -right-4 top-0.5 text-red-400 opacity-0 group-hover:opacity-100"
+                                 >
+                                    <X size={12} />
+                                 </button>
+                               )}
+                            </div>
+                         ))}
+                         {isEditing && (
+                            <button 
+                              onClick={() => {
+                                 const newSkills = {...data.skills};
+                                 newSkills[category] = [...items, "新技能"];
+                                 setData({...data, skills: newSkills});
+                              }}
+                              className="text-xs text-slate-400 flex items-center gap-1 mt-1"
+                            >
+                               <Plus size={10} /> 添加
+                            </button>
+                         )}
+                      </div>
+                   </div>
+                ))}
+            </div>
+         </div>
+
+         {/* Summary */}
+         <div>
+            <h2 className={`text-lg font-bold uppercase tracking-wider mb-3 ${getThemeClass('text')} border-b pb-1`}>个人简介</h2>
+            <div className="text-sm leading-relaxed text-slate-600">
+               <EditableField 
+                  value={data.basics.summary} 
+                  onChange={(val: string) => setData({...data, basics: {...data.basics, summary: val}})}
+                  isEditing={isEditing}
+                  multiline={true}
+                  className="w-full block"
+               />
+            </div>
+         </div>
+
+         {/* Projects */}
+         <div className="flex-1">
+            <h2 className={`text-lg font-bold uppercase tracking-wider mb-4 ${getThemeClass('text')} border-b pb-1`}>项目经历</h2>
+            <div className="flex flex-col space-y-5">
+               {data.projects.map((project, index) => (
+                  <div key={index} className="relative group">
+                      {isEditing && (
+                        <div className="absolute right-0 top-0 flex gap-1 bg-white p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 border border-slate-200 rounded">
+                           <MoveButton 
+                              onClick={() => moveProject(index, 'up')} 
+                              direction="up" 
+                              disabled={index === 0} 
+                           />
+                           <MoveButton 
+                              onClick={() => moveProject(index, 'down')} 
+                              direction="down" 
+                              disabled={index === data.projects.length - 1} 
+                           />
+                           <DeleteButton onClick={() => {
+                              const newProjects = [...data.projects];
+                              newProjects.splice(index, 1);
+                              setData({...data, projects: newProjects});
+                           }} />
+                        </div>
+                      )}
+                      <div className="flex justify-between items-baseline mb-1">
+                        <div className="flex items-center gap-2">
+                           <h3 className="font-bold text-slate-800 text-base">
+                              <EditableField 
+                                 value={project.name}
+                                 onChange={(val: string) => {
+                                    const newProjects = [...data.projects];
+                                    newProjects[index].name = val;
+                                    setData({...data, projects: newProjects});
+                                 }}
+                                 isEditing={isEditing}
+                                 placeholder="项目名称"
+                              />
+                           </h3>
+                           <span className={`text-xs px-2 py-0.5 rounded ${getThemeClass('bg')} ${getThemeClass('text')}`}>
+                              <EditableField 
+                                 value={project.role}
+                                 onChange={(val: string) => {
+                                    const newProjects = [...data.projects];
+                                    newProjects[index].role = val;
+                                    setData({...data, projects: newProjects});
+                                 }}
+                                 isEditing={isEditing}
+                                 placeholder="角色"
+                              />
+                           </span>
+                        </div>
+                        <div className="text-sm font-medium text-slate-500">
+                           <EditableField 
+                              value={project.date}
+                              onChange={(val: string) => {
+                                 const newProjects = [...data.projects];
+                                 newProjects[index].date = val;
+                                 setData({...data, projects: newProjects});
+                              }}
+                              isEditing={isEditing}
+                              placeholder="时间"
+                           />
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm text-slate-600 mb-2 italic">
+                         <EditableField 
+                              value={project.desc}
+                              onChange={(val: string) => {
+                                 const newProjects = [...data.projects];
+                                 newProjects[index].desc = val;
+                                 setData({...data, projects: newProjects});
+                              }}
+                              isEditing={isEditing}
+                              multiline={true}
+                              placeholder="项目简述"
+                           />
+                      </div>
+
+                      <ul className="text-sm text-slate-600 list-disc list-inside space-y-1 ml-1">
+                        {(project.details || []).map((detail, dIdx) => (
+                           <li key={dIdx} className="relative group pl-2 -indent-2">
+                              <EditableField 
+                                 value={detail}
+                                 onChange={(val: string) => {
+                                    const newProjects = [...data.projects];
+                                    newProjects[index].details[dIdx] = val;
+                                    setData({...data, projects: newProjects});
+                                 }}
+                                 isEditing={isEditing}
+                                 multiline={true}
+                                 placeholder="详情"
+                              />
+                              {isEditing && (
+                                 <button 
+                                    onClick={() => {
+                                       const newProjects = [...data.projects];
+                                       newProjects[index].details = project.details.filter((_, i) => i !== dIdx);
+                                       setData({...data, projects: newProjects});
+                                    }}
+                                    className="absolute right-0 top-0 text-red-400 opacity-0 group-hover:opacity-100"
+                                 >
+                                    <X size={12} />
+                                 </button>
+                              )}
+                           </li>
                         ))}
                         {isEditing && (
-                           <li className="list-none -ml-4 mt-1"><button onClick={() => addProjectDetail(idx)} className="text-xs text-blue-500 hover:underline">+ 详情</button></li>
+                           <button 
+                              onClick={() => {
+                                 const newProjects = [...data.projects];
+                                 if(!newProjects[index].details) newProjects[index].details = [];
+                                 newProjects[index].details.push("新项目详情");
+                                 setData({...data, projects: newProjects});
+                              }}
+                              className="text-xs text-slate-400 flex items-center gap-1 mt-1 ml-4"
+                           >
+                              <Plus size={10} /> 添加详情
+                           </button>
                         )}
                       </ul>
-                    )}
                   </div>
-                ))}
-              </div>
-           </section>
-        </div>
-
-        {/* Side Column */}
-        <div className="space-y-6">
-          {/* Education */}
-          <section>
-            <h3 className={`text-lg font-bold uppercase tracking-widest ${themeText} border-b border-slate-200 mb-4 pb-1 flex justify-between items-center`}>
-              教育经历
-              <SectionControls onAdd={addEducation} label="" isEditing={isEditing} />
-            </h3>
-            <div className="space-y-4">
-              {resume.education.map((edu, idx) => (
-                <div key={idx} className="relative group/item">
-                  {isEditing && <DeleteButton onClick={() => removeEducation(idx)} className="absolute -right-8 top-0" />}
-                  <EditableField value={edu.institution} onChange={(v) => updateEducation(idx, "institution", v)} isEditing={isEditing} className="font-bold text-slate-800 block" placeholder="学校" />
-                  <EditableField value={edu.major} onChange={(v) => updateEducation(idx, "major", v)} isEditing={isEditing} className="text-sm text-slate-600 block" placeholder="专业" />
-                   <div className="text-xs text-slate-500 flex gap-1 mt-1">
-                      <EditableField value={edu.degree} onChange={(v) => updateEducation(idx, "degree", v)} isEditing={isEditing} placeholder="学位" />
-                      <span>•</span>
-                      <EditableField value={edu.start} onChange={(v) => updateEducation(idx, "start", v)} isEditing={isEditing} placeholder="开始" />
-                      <span>-</span>
-                      <EditableField value={edu.end} onChange={(v) => updateEducation(idx, "end", v)} isEditing={isEditing} placeholder="结束" />
-                   </div>
-                </div>
-              ))}
+               ))}
+               <SectionControls 
+                  isEditing={isEditing} 
+                  onAdd={() => setData({...data, projects: [...data.projects, {
+                     name: "新项目",
+                     role: "角色",
+                     date: "20xx.xx",
+                     desc: "项目简述",
+                     details: ["项目详情"]
+                  }]})} 
+                  label="项目经历"
+               />
             </div>
-          </section>
-
-          {/* Skills */}
-          <section>
-            <h3 className={`text-lg font-bold uppercase tracking-widest ${themeText} border-b border-slate-200 mb-4 pb-1`}>技能</h3>
-            <div className="space-y-3">
-              {[
-                { key: "languages", label: "开发语言" },
-                { key: "frontend", label: "前端" },
-                { key: "backend", label: "后端" },
-                { key: "hardware", label: "硬件" }
-              ].map((cat) => (
-                <div key={cat.key}>
-                   <div className="flex justify-between items-center mb-1">
-                      <span className="font-bold text-xs text-slate-500 uppercase">{cat.label}</span>
-                      <SectionControls onAdd={() => addSkill(cat.key)} label="" isEditing={isEditing} />
-                   </div>
-                   <div className="flex flex-wrap gap-2">
-                      {resume.skills[cat.key].map((skill, idx) => (
-                        <div key={idx} className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs flex items-center gap-1 group/item">
-                          <EditableField value={skill} onChange={(v) => updateSkills(cat.key, idx, v)} isEditing={isEditing} />
-                          {isEditing && <X size={10} className="cursor-pointer hover:text-red-500" onClick={() => removeSkill(cat.key, idx)} />}
-                        </div>
-                      ))}
-                   </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-           {/* Certificates */}
-           <section>
-             <h3 className={`text-lg font-bold uppercase tracking-widest ${themeText} border-b border-slate-200 mb-4 pb-1 flex justify-between items-center`}>
-               证书
-               <SectionControls onAdd={addCertificate} label="" isEditing={isEditing} />
-             </h3>
-             <ul className="space-y-2">
-                {resume.certificates.map((cert, idx) => (
-                  <li key={idx} className="text-sm text-slate-600 flex items-start gap-2 relative group/item">
-                    {isEditing && <button onClick={() => removeCertificate(idx)} className="text-red-400 shrink-0"><X size={12}/></button>}
-                    <span className="text-slate-400 mt-1">•</span>
-                    <EditableField value={cert} onChange={(v) => updateCertificate(idx, v)} isEditing={isEditing} className="w-full" />
-                  </li>
-                ))}
-             </ul>
-           </section>
-        </div>
+         </div>
       </div>
-    </div>
-  );
+   );
 };
 
-
-// --- Main Application ---
+// --- App ---
 
 const App = () => {
-  const [resume, setResume] = useState(() => {
-    const saved = localStorage.getItem("resume_data");
-    return saved ? JSON.parse(saved) : initialResumeData;
-  });
   const [isEditing, setIsEditing] = useState(false);
-  const [themeColor, setThemeColor] = useState(THEME_COLORS.blue);
+  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState(TEMPLATES.modern);
-  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [themeColor, setThemeColor] = useState(THEME_COLORS.blue);
 
   useEffect(() => {
-    localStorage.setItem("resume_data", JSON.stringify(resume));
-  }, [resume]);
+    const saved = localStorage.getItem("resumeData");
+    if (saved) {
+      try {
+        setResumeData(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to load saved resume data", e);
+      }
+    }
+  }, []);
 
-  // Update handlers
-  const updateBasic = (field, value) => {
-    setResume(prev => ({ ...prev, basics: { ...prev.basics, [field]: value } }));
-  };
+  useEffect(() => {
+    localStorage.setItem("resumeData", JSON.stringify(resumeData));
+  }, [resumeData]);
 
-  const updateEducation = (idx, field, value) => {
-    const newEdu = [...resume.education];
-    newEdu[idx] = { ...newEdu[idx], [field]: value };
-    setResume(prev => ({ ...prev, education: newEdu }));
-  };
-
-  const addEducation = () => {
-    setResume(prev => ({
-      ...prev,
-      education: [...prev.education, { institution: "新学校", major: "新专业", degree: "学位", start: "20xx", end: "20xx" }]
-    }));
-  };
-
-  const removeEducation = (idx) => {
-    setResume(prev => ({
-      ...prev,
-      education: prev.education.filter((_, i) => i !== idx)
-    }));
-  };
-
-  const updateSkills = (category, idx, value) => {
-    const newSkills = { ...resume.skills };
-    newSkills[category][idx] = value;
-    setResume(prev => ({ ...prev, skills: newSkills }));
-  };
-
-  const addSkill = (category) => {
-    const newSkills = { ...resume.skills };
-    newSkills[category] = [...newSkills[category], "新技能"];
-    setResume(prev => ({ ...prev, skills: newSkills }));
-  };
-
-  const removeSkill = (category, idx) => {
-    const newSkills = { ...resume.skills };
-    newSkills[category] = newSkills[category].filter((_, i) => i !== idx);
-    setResume(prev => ({ ...prev, skills: newSkills }));
-  };
-
-  const updateCertificate = (idx, value) => {
-    const newCerts = [...resume.certificates];
-    newCerts[idx] = value;
-    setResume(prev => ({ ...prev, certificates: newCerts }));
-  };
-
-  const addCertificate = () => {
-    setResume(prev => ({ ...prev, certificates: [...prev.certificates, "新证书"] }));
-  };
-
-  const removeCertificate = (idx) => {
-    setResume(prev => ({ ...prev, certificates: prev.certificates.filter((_, i) => i !== idx) }));
-  };
-
-  const updateProject = (idx, field, value) => {
-    const newProj = [...resume.projects];
-    newProj[idx] = { ...newProj[idx], [field]: value };
-    setResume(prev => ({ ...prev, projects: newProj }));
-  };
-
-  const addProject = () => {
-    setResume(prev => ({
-      ...prev,
-      projects: [{ name: "新项目", role: "角色", date: "时间", desc: "描述...", details: ["详情..."] }, ...prev.projects]
-    }));
-  };
-
-  const removeProject = (idx) => {
-    setResume(prev => ({ ...prev, projects: prev.projects.filter((_, i) => i !== idx) }));
-  };
-
-  const updateProjectDetail = (pIdx, dIdx, value) => {
-    const newProj = [...resume.projects];
-    newProj[pIdx].details[dIdx] = value;
-    setResume(prev => ({ ...prev, projects: newProj }));
-  };
-
-  const addProjectDetail = (pIdx) => {
-    const newProj = [...resume.projects];
-    newProj[pIdx].details.push("新详情条目");
-    setResume(prev => ({ ...prev, projects: newProj }));
-  };
-
-  const removeProjectDetail = (pIdx, dIdx) => {
-    const newProj = [...resume.projects];
-    newProj[pIdx].details = newProj[pIdx].details.filter((_, i) => i !== dIdx);
-    setResume(prev => ({ ...prev, projects: newProj }));
+  const handlePrint = async () => {
+    if (isEditing) {
+       // Auto-save and exit edit mode before printing
+       setIsEditing(false);
+    }
+    
+    setIsPrinting(true);
+    // Slight delay to ensure React state updates and DOM renders without edit controls
+    setTimeout(() => {
+      window.print();
+      setIsPrinting(false);
+    }, 500);
   };
 
   const toggleEdit = () => {
     if (isEditing) {
-      setShowExitDialog(true);
+      if (confirm("确定要退出编辑模式吗？")) {
+        setIsEditing(false);
+      }
     } else {
       setIsEditing(true);
     }
   };
 
-  const confirmExitEdit = () => {
-    setIsEditing(false);
-    setShowExitDialog(false);
+  const exportData = () => {
+     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData));
+     const downloadAnchorNode = document.createElement('a');
+     downloadAnchorNode.setAttribute("href", dataStr);
+     downloadAnchorNode.setAttribute("download", "resume_data.json");
+     document.body.appendChild(downloadAnchorNode);
+     downloadAnchorNode.click();
+     downloadAnchorNode.remove();
   };
 
-  const handlePrint = () => {
-    const wasEditing = isEditing;
-    setIsEditing(false);
-    // Give React a moment to re-render without edit UI before printing
-    setTimeout(() => {
-      window.print();
-      // Restore edit mode if it was on (optional, usually users expect it to stay preview)
-      if (wasEditing) setIsEditing(true);
-    }, 500);
-  };
-
-  const handleBackup = () => {
-    const dataStr = JSON.stringify(resume, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `resume_backup_${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const fileImportRef = useRef(null);
-  
-  const handleImportClick = () => {
-    fileImportRef.current.click();
-  };
-
-  const handleImportFile = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const result = event.target.result;
-        if (typeof result === 'string') {
-          const importedData = JSON.parse(result);
-          // Basic validation could go here
-          setResume(importedData);
-          alert("数据导入成功！");
+  const importData = (e: any) => {
+     const file = e.target.files[0];
+     if (!file) return;
+     const reader = new FileReader();
+     reader.onload = (event) => {
+        try {
+           if (event.target?.result) {
+               const obj = JSON.parse(event.target.result as string);
+               // Basic validation could go here
+               setResumeData(obj);
+               alert("数据导入成功！");
+           }
+        } catch(err) {
+           alert("导入失败：无效的 JSON 文件");
         }
-      } catch (err) {
-        alert("导入失败：文件格式错误");
-        console.error(err);
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = null; // reset
+     };
+     reader.readAsText(file);
+  };
+
+  // Reordering function
+  const moveProject = (index: number, direction: 'up' | 'down') => {
+    const newProjects = [...resumeData.projects];
+    if (direction === 'up' && index > 0) {
+      [newProjects[index], newProjects[index - 1]] = [newProjects[index - 1], newProjects[index]];
+    } else if (direction === 'down' && index < newProjects.length - 1) {
+      [newProjects[index], newProjects[index + 1]] = [newProjects[index + 1], newProjects[index]];
+    }
+    setResumeData({ ...resumeData, projects: newProjects });
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans print:bg-white pb-20 print:pb-0">
-      
-      {/* Toolbar - No Print */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur shadow-2xl rounded-full p-2 flex items-center gap-2 z-50 print:hidden border border-slate-200">
-        
+    <div className="min-h-screen pb-20 md:pb-0">
+      {/* Floating Toolbar */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-white/90 backdrop-blur shadow-2xl p-2 rounded-2xl border border-slate-200 no-print transition-all hover:scale-105">
         <button 
           onClick={toggleEdit}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
             isEditing 
-              ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700" 
-              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              ? "bg-red-500 text-white shadow-lg shadow-red-500/30" 
+              : "bg-slate-800 text-white shadow-lg shadow-slate-800/30"
           }`}
         >
-          {isEditing ? <Check size={18} /> : <Edit2 size={18} />}
-          {isEditing ? "完成编辑" : "编辑简历"}
+          {isEditing ? <><LogOut size={18} /> 退出编辑</> : <><Edit2 size={18} /> 编辑内容</>}
         </button>
 
-        <div className="w-px h-6 bg-slate-300 mx-1"></div>
-        
-        <div className="flex items-center gap-1 bg-slate-100 rounded-full p-1">
-          <button 
-            onClick={() => setCurrentTemplate(TEMPLATES.modern)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${currentTemplate === TEMPLATES.modern ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            现代侧边
-          </button>
-           <button 
-            onClick={() => setCurrentTemplate(TEMPLATES.classic)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${currentTemplate === TEMPLATES.classic ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            经典专业
-          </button>
-        </div>
-
-        <div className="w-px h-6 bg-slate-300 mx-1"></div>
-
-        <div className="flex items-center gap-1 px-2">
-           {Object.keys(THEME_COLORS).map(color => (
-             <button
-              key={color}
-              onClick={() => setThemeColor(color)}
-              className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${themeColor === color ? 'border-slate-600 scale-110' : 'border-transparent'}`}
-              style={{ backgroundColor: color === 'slate' ? '#475569' : color === 'emerald' ? '#10b981' : color === 'violet' ? '#8b5cf6' : color === 'rose' ? '#f43f5e' : '#3b82f6' }}
-              title={color}
-             />
-           ))}
-        </div>
-
-        <div className="w-px h-6 bg-slate-300 mx-1"></div>
+        <div className="w-px h-8 bg-slate-200 mx-1"></div>
 
         <button 
           onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 text-white hover:bg-slate-900 transition-colors shadow-lg"
+          className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
           title="导出 PDF"
         >
-          <Download size={18} />
-          <span className="hidden sm:inline">导出 PDF</span>
+          <Download size={20} />
         </button>
 
-         <div className="relative group">
-            <button className="p-2 rounded-full hover:bg-slate-100 text-slate-600">
-               <Save size={18} />
-            </button>
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white rounded-lg shadow-xl p-2 flex flex-col gap-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-32 text-sm">
-               <button onClick={handleBackup} className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded text-slate-700 text-left">
-                  <FileJson size={14}/> 备份数据
-               </button>
-               <button onClick={handleImportClick} className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded text-slate-700 text-left">
-                  <UploadCloud size={14}/> 导入备份
-               </button>
-               <input type="file" ref={fileImportRef} onChange={handleImportFile} className="hidden" accept=".json" />
-            </div>
-         </div>
+        <div className="relative group">
+           <button className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors" title="备份/恢复">
+              <Save size={20} />
+           </button>
+           <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-xl border border-slate-100 overflow-hidden hidden group-hover:flex flex-col w-32">
+              <button onClick={exportData} className="px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2">
+                 <Download size={14} /> 导出备份
+              </button>
+              <label className="px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 cursor-pointer">
+                 <UploadCloud size={14} /> 恢复备份
+                 <input type="file" accept=".json" onChange={importData} className="hidden" />
+              </label>
+           </div>
+        </div>
+
+        <div className="w-px h-8 bg-slate-200 mx-1"></div>
+
+        {/* Template Switcher */}
+        <div className="flex bg-slate-100 rounded-xl p-1">
+           <button 
+             onClick={() => setCurrentTemplate(TEMPLATES.modern)}
+             className={`p-1.5 rounded-lg transition-all ${currentTemplate === TEMPLATES.modern ? 'bg-white shadow text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+             title="现代侧边栏"
+           >
+              <Layout size={18} />
+           </button>
+           <button 
+             onClick={() => setCurrentTemplate(TEMPLATES.classic)}
+             className={`p-1.5 rounded-lg transition-all ${currentTemplate === TEMPLATES.classic ? 'bg-white shadow text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+             title="经典简约"
+           >
+              <FileJson size={18} />
+           </button>
+        </div>
+
+        {/* Color Picker */}
+        <div className="relative group mx-1">
+           <button className={`w-8 h-8 rounded-full border-2 border-white shadow flex items-center justify-center ${
+              themeColor === THEME_COLORS.blue ? 'bg-blue-500' : 
+              themeColor === THEME_COLORS.emerald ? 'bg-emerald-500' : 
+              themeColor === THEME_COLORS.violet ? 'bg-violet-500' : 
+              themeColor === THEME_COLORS.rose ? 'bg-rose-500' : 'bg-slate-500'
+           }`}>
+              <Palette size={14} className="text-white" />
+           </button>
+           <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 flex gap-2 bg-white p-2 rounded-xl shadow-xl border border-slate-100 hidden group-hover:flex">
+              {Object.entries(THEME_COLORS).map(([name, value]) => (
+                 <button 
+                   key={name}
+                   onClick={() => setThemeColor(value)}
+                   className={`w-6 h-6 rounded-full border border-slate-200 transition-transform hover:scale-110 ${
+                      value === 'blue' ? 'bg-blue-500' : 
+                      value === 'emerald' ? 'bg-emerald-500' : 
+                      value === 'violet' ? 'bg-violet-500' : 
+                      value === 'rose' ? 'bg-rose-500' : 'bg-slate-500'
+                   }`}
+                 />
+              ))}
+           </div>
+        </div>
+
       </div>
 
-      {/* Exit Dialog */}
-      {showExitDialog && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-200">
-            <h3 className="text-lg font-bold text-slate-900 mb-2">确认退出编辑？</h3>
-            <p className="text-slate-600 mb-6 text-sm">您的更改会自动保存，确定要切换回预览模式吗？</p>
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setShowExitDialog(false)}
-                className="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium text-sm"
-              >
-                取消
-              </button>
-              <button 
-                onClick={confirmExitEdit}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium text-sm shadow-lg shadow-blue-200"
-              >
-                确认退出
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Resume Container - A4 Size Aspect Ratio managed largely by content but constrained max-width */}
-      <div className="max-w-[210mm] mx-auto bg-white shadow-2xl print:shadow-none print:max-w-none print:w-full min-h-[297mm]">
-        {currentTemplate === TEMPLATES.modern ? (
-          <ModernTemplate 
-            resume={resume} 
-            isEditing={isEditing} 
-            updateBasic={updateBasic}
-            updateEducation={updateEducation}
-            updateSkills={updateSkills}
-            updateCertificate={updateCertificate}
-            updateProject={updateProject}
-            updateProjectDetail={updateProjectDetail}
-            addEducation={addEducation}
-            removeEducation={removeEducation}
-            addSkill={addSkill}
-            removeSkill={removeSkill}
-            addCertificate={addCertificate}
-            removeCertificate={removeCertificate}
-            addProject={addProject}
-            removeProject={removeProject}
-            addProjectDetail={addProjectDetail}
-            removeProjectDetail={removeProjectDetail}
-            themeColor={themeColor}
-          />
-        ) : (
-          <ClassicTemplate 
-            resume={resume} 
-            isEditing={isEditing} 
-            updateBasic={updateBasic}
-            updateEducation={updateEducation}
-            updateSkills={updateSkills}
-            updateCertificate={updateCertificate}
-            updateProject={updateProject}
-            updateProjectDetail={updateProjectDetail}
-            addEducation={addEducation}
-            removeEducation={removeEducation}
-            addSkill={addSkill}
-            removeSkill={removeSkill}
-            addCertificate={addCertificate}
-            removeCertificate={removeCertificate}
-            addProject={addProject}
-            removeProject={removeProject}
-            addProjectDetail={addProjectDetail}
-            removeProjectDetail={removeProjectDetail}
-            themeColor={themeColor}
-          />
-        )}
+      <div className="max-w-[210mm] mx-auto my-8 print:my-0 print:w-full print:max-w-none">
+         {currentTemplate === TEMPLATES.modern ? (
+            <ModernTemplate 
+               data={resumeData} 
+               setData={setResumeData} 
+               isEditing={isEditing} 
+               themeColor={themeColor} 
+               moveProject={moveProject}
+            />
+         ) : (
+            <ClassicTemplate 
+               data={resumeData} 
+               setData={setResumeData} 
+               isEditing={isEditing} 
+               themeColor={themeColor} 
+               moveProject={moveProject}
+            />
+         )}
       </div>
     </div>
   );
 };
 
-const root = createRoot(document.getElementById("root"));
+const container = document.getElementById("root");
+const root = createRoot(container!);
 root.render(<App />);
