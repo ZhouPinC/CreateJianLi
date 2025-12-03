@@ -284,16 +284,17 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
 
   return (
     <div className="flex flex-col md:flex-row print:flex-row min-h-[1123px] w-full bg-white shadow-xl print:shadow-none print:w-full">
-      {/* Sidebar - Dark Theme - Made more compact (p-5, gap-5) */}
-      <div className={`w-full md:w-1/3 print:w-1/3 ${getThemeClass('bg')} text-slate-300 p-5 flex flex-col gap-5`}>
+      {/* Sidebar - Dark Theme - Expanded width to 38% and increased padding/gaps */}
+      <div className={`w-full md:w-[38%] print:w-[38%] ${getThemeClass('bg')} text-slate-300 p-8 flex flex-col gap-8`}>
         {/* Avatar Section */}
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-4">
           <div className="relative group">
-            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/10 bg-white/5 flex items-center justify-center">
+            {/* Increased avatar size to w-32 h-32 */}
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white/10 bg-white/5 flex items-center justify-center">
               {data.basics.avatar ? (
                 <img src={data.basics.avatar} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <User size={40} className="text-white/20" />
+                <User size={48} className="text-white/20" />
               )}
             </div>
             {isEditing && (
@@ -301,7 +302,7 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
                 onClick={() => fileInputRef.current?.click()}
                 className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
               >
-                <Upload size={20} className="text-white" />
+                <Upload size={24} className="text-white" />
               </button>
             )}
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
@@ -334,7 +335,7 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
             />
           </div>
 
-          <div className="flex flex-col items-center gap-0.5 text-sm w-full opacity-90">
+          <div className="flex flex-col items-center gap-1 text-sm w-full opacity-90">
              <div className="flex items-center gap-2">
                 <EditableField 
                   value={data.basics.experience} 
@@ -359,9 +360,9 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
         <div className="w-full h-px bg-white/10" />
 
         {/* Contact Info */}
-        <div className="flex flex-col gap-2.5 text-sm">
+        <div className="flex flex-col gap-4 text-sm">
           <div className="flex items-center gap-3">
-            <Phone size={14} className={getThemeClass('text')} />
+            <Phone size={16} className={getThemeClass('text')} />
             <EditableField 
               value={data.basics.phone} 
               onChange={(val: string) => setData({...data, basics: {...data.basics, phone: val}})}
@@ -371,7 +372,7 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
             />
           </div>
           <div className="flex items-center gap-3">
-            <Mail size={14} className={getThemeClass('text')} />
+            <Mail size={16} className={getThemeClass('text')} />
             <EditableField 
               value={data.basics.email} 
               onChange={(val: string) => setData({...data, basics: {...data.basics, email: val}})}
@@ -381,7 +382,7 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
             />
           </div>
           <div className="flex items-center gap-3">
-            <MapPin size={14} className={getThemeClass('text')} />
+            <MapPin size={16} className={getThemeClass('text')} />
             <EditableField 
               value={data.basics.location} 
               onChange={(val: string) => setData({...data, basics: {...data.basics, location: val}})}
@@ -396,10 +397,10 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
 
         {/* Education */}
         <div>
-          <h3 className="flex items-center gap-2 text-base font-bold text-white mb-2.5">
-            <GraduationCap size={18} /> 教育经历
+          <h3 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+            <GraduationCap size={20} /> 教育经历
           </h3>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {data.education.map((edu, index) => (
               <div key={index} className="relative group">
                 {isEditing && (
@@ -423,7 +424,7 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
                   className="font-bold text-sm block text-white"
                   placeholder="学校名称"
                 />
-                <div className="flex justify-between text-xs mt-0.5 text-white/70">
+                <div className="flex justify-between text-xs mt-1 text-white/70">
                    <div className="flex gap-1.5 flex-wrap">
                       <EditableField 
                         value={edu.major} 
@@ -450,7 +451,7 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
                       />
                    </div>
                 </div>
-                <div className="text-xs mt-0.5 opacity-60">
+                <div className="text-xs mt-1 opacity-60">
                    <span className="flex gap-1">
                     <EditableField 
                         value={edu.start} 
@@ -492,23 +493,23 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
 
         {/* Skills */}
         <div>
-          <h3 className="flex items-center gap-2 text-base font-bold text-white mb-2.5">
-            <Code size={18} /> 专业技能
+          <h3 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+            <Code size={20} /> 专业技能
           </h3>
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-4">
             {Object.entries(data.skills).map(([category, items]) => (
               <div key={category} className="mb-0.5">
-                <h4 className={`text-xs font-bold mb-1 uppercase opacity-80 ${getThemeClass('text')}`}>
+                <h4 className={`text-xs font-bold mb-2 uppercase opacity-80 ${getThemeClass('text')}`}>
                   {category === 'languages' ? '开发语言' : 
                    category === 'frontend' ? '前端/移动端' : 
                    category === 'backend' ? '后端/数据库' :
                    category === 'hardware' ? '硬件/嵌入式' : '其他工具'}
                 </h4>
-                <div className="flex flex-wrap gap-2"> {/* Keep gap-2 from previous request */}
+                <div className="flex flex-wrap gap-2">
                   {items.map((skill, idx) => (
                     <span key={idx} className="relative group inline-block">
-                      {/* Reduced text size to text-[10px] and adjusted border */}
-                      <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] text-slate-200 border border-white/10">
+                      {/* Restored standard text size (text-xs) */}
+                      <span className="bg-white/10 px-2 py-1 rounded text-xs text-slate-200 border border-white/10">
                         <EditableField 
                            value={skill}
                            onChange={(val: string) => {
@@ -518,7 +519,7 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
                            }}
                            isEditing={isEditing}
                            darkTheme={true}
-                           className="text-[10px]"
+                           className="text-xs"
                         />
                       </span>
                       {isEditing && (
@@ -542,7 +543,7 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
                         newSkills[category] = [...items, "New Skill"];
                         setData({...data, skills: newSkills});
                       }}
-                      className="bg-white/5 px-2 py-0.5 rounded text-[10px] text-white/50 border border-dashed border-white/20 hover:text-white hover:border-white/50 transition-colors"
+                      className="bg-white/5 px-2 py-1 rounded text-xs text-white/50 border border-dashed border-white/20 hover:text-white hover:border-white/50 transition-colors"
                     >
                       +
                     </button>
@@ -557,10 +558,10 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
 
          {/* Certificates */}
          <div>
-          <h3 className="flex items-center gap-2 text-base font-bold text-white mb-2.5">
-            <Award size={18} /> 资格证书
+          <h3 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+            <Award size={20} /> 资格证书
           </h3>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-2">
             {data.certificates.map((cert, index) => (
               <li key={index} className="text-sm text-slate-300 relative group flex items-start gap-2">
                  <span className={`mt-1.5 w-1.5 h-1.5 rounded-full ${getThemeClass('bg').replace('bg-', 'bg-') === 'bg-slate-900' ? 'bg-white/40' : 'bg-white/40'}`}></span>
@@ -595,8 +596,8 @@ const ModernTemplate = ({ data, setData, isEditing, themeColor, moveProject }: {
         </div>
       </div>
 
-      {/* Main Content - Light Theme */}
-      <div className="w-full md:w-2/3 print:w-2/3 p-10 text-slate-800">
+      {/* Main Content - Adjusted width to 62% */}
+      <div className="w-full md:w-[62%] print:w-[62%] p-10 text-slate-800">
         
         {/* Summary Section */}
         <section className="mb-10">
