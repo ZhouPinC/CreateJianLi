@@ -20,7 +20,11 @@ import {
   Layout,
   Palette,
   Github,
-  Globe
+  Globe,
+  FileJson,
+  UploadCloud,
+  Save,
+  LogOut
 } from "lucide-react";
 
 // --- Types & Initial Data ---
@@ -38,105 +42,74 @@ const TEMPLATES = {
   classic: "classic"
 };
 
+// Placeholder data for public repository
 const initialResumeData = {
   basics: {
-    name: "周品丞",
-    title: "前端 / 移动开发工程师",
-    phone: "15211018065",
-    email: "762498595@qq.com",
-    location: "长沙",
-    salary: "5-10K",
-    experience: "21岁 | 男",
-    summary: "22级物联网工程专业。具有扎实的前端（安卓，鸿蒙，Web，小程序，Win桌面应用）开发经验，以及单片机（STM32, ESP32）开发经验。工作积极认真，细心负责，善于分析和解决问题。学习能力强，能快速上手新技术，拥有强烈的团队荣誉感。熟练使用AI工具辅助开发，提升工作效率。",
+    name: "您的姓名",
+    title: "求职意向 / 职位头衔",
+    phone: "138-xxxx-xxxx",
+    email: "example@email.com",
+    location: "意向城市",
+    salary: "期望薪资",
+    experience: "年龄 | 经验",
+    summary: "这里是您的个人简介。请简要描述您的专业背景、核心技能以及职业目标。例如：具有X年开发经验，熟悉React与Node.js，善于解决复杂问题，具备良好的团队协作能力，对新技术保持敏锐的洞察力。",
     avatar: "" // Base64 string for avatar
   },
   education: [
     {
-      institution: "长沙师范学院",
-      major: "物联网工程",
-      degree: "本科",
-      start: "2022",
-      end: "2026"
+      institution: "毕业院校名称",
+      major: "主修专业",
+      degree: "学历/学位",
+      start: "20xx",
+      end: "20xx"
     }
   ],
   skills: {
-    languages: ["Java", "C++", "Python", "ArkTS", "JavaScript/TypeScript"],
-    frontend: ["Android", "HarmonyOS", "Web (React/Vue)", "微信小程序", "Qt", "ETS"],
-    backend: ["MySQL", "Django", "Java Socket"],
-    hardware: ["STM32", "ESP32", "C51", "FreeRTOS", "Sensors/Actuators"],
-    others: ["Git", "Linux", "AI Tools Integration"]
+    languages: ["Java", "C++", "Python", "JavaScript", "TypeScript"],
+    frontend: ["React", "Vue", "Android", "Flutter", "iOS"],
+    backend: ["Node.js", "MySQL", "Redis", "Docker"],
+    hardware: ["Arduino", "Raspberry Pi", "IoT Sensors"],
+    others: ["Git", "Linux", "Agile", "CI/CD"]
   },
   certificates: [
-    "日语 JLPT N2",
-    "计算机程序设计员 (四级)",
-    "软件著作权《基于Web的智能电梯信息监控平台》",
-    "全国计算机二级考试",
-    "普通话水平测试二级甲等",
-    "机动车驾驶证 (C1)"
+    "证书名称示例 1 (例如：CET-6)",
+    "证书名称示例 2 (例如：PMP认证)",
+    "证书名称示例 3",
+    "相关技能证书 A",
+    "相关技能证书 B"
   ],
   projects: [
     {
-      name: "恒达科技公司官网",
-      role: "负责人",
-      date: "2025.04 - 2025.04",
-      desc: "负责公司官网的全栈开发与维护。",
+      name: "项目名称示例 A",
+      role: "负责人/开发者",
+      date: "20xx.xx - 20xx.xx",
+      desc: "简要描述项目的核心功能、目标以及您在其中发挥的作用。",
       details: [
-        "定义产品、招聘等模型类，通过ORM映射数据库表，实现数据结构化存储。",
-        "定制Django Admin后台，配置高级筛选与批量操作，优化数据管理流程。",
-        "自定义CSS样式与交互细节，集成Django认证系统，实现分组权限管理。"
+        "负责的具体工作内容描述，使用了什么技术解决了什么问题。",
+        "实现了某某核心模块，提升了系统性能xx%。",
+        "优化了用户体验，主导了技术选型与架构设计。"
       ]
     },
     {
-      name: "智慧农业检测控制小程序",
-      role: "负责人",
-      date: "2024.07 - 2024.07",
-      desc: "集软硬件于一体的智慧农业解决方案。",
+      name: "项目名称示例 B",
+      role: "核心成员",
+      date: "20xx.xx - 20xx.xx",
+      desc: "另一个项目的简要描述。",
       details: [
-        "设计微信小程序前端及交互，集成讯飞星火AI API提供智能问答服务。",
-        "基于FreeRTOS与STM32实时采集传感器数据，通过ESP32 WiFi/蓝牙模块实现端到端通信。"
+        "参与了模块的需求分析与编码工作。",
+        "配合团队完成了系统的测试与上线。",
+        "编写了自动化脚本，提高了开发效率。"
       ]
     },
     {
-      name: "智能手表系统 (STM32 + FreeRTOS)",
-      role: "负责人",
-      date: "2025.07 - 2025.07",
-      desc: "基于嵌入式系统的智能穿戴设备原型。",
+      name: "个人开源项目",
+      role: "独立开发",
+      date: "20xx.xx",
+      desc: "基于某某技术栈开发的个人兴趣项目。",
       details: [
-        "利用FreeRTOS创建多任务系统，实现按键输入与任务切换。",
-        "使用UART调试，I2C驱动OLED屏幕，TIM定时器控制螺旋编码器。"
+        "项目亮点功能介绍一。",
+        "项目亮点功能介绍二。"
       ]
-    },
-    {
-      name: "仿小米历史记录计算器 (Android)",
-      role: "开发者",
-      date: "2024.10 - 2024.10",
-      desc: "原生Android应用开发。",
-      details: [
-        "高度还原小米计算器UI，实现历史记录存储与一键复现功能。",
-        "使用MySQL进行数据持久化存储。"
-      ]
-    },
-    {
-      name: "三端联通猜数字游戏",
-      role: "开发者",
-      date: "2025.11 - 2025.11",
-      desc: "Java桌面端 + 小程序 + Web端跨平台互动游戏。",
-      details: [
-        "通过Socket发送JSON数据实现多端实时通信。",
-        "开发Web后台查看用户详细信息与游戏历史记录。"
-      ]
-    },
-    {
-      name: "鸿蒙仿微信主页面",
-      role: "开发者",
-      date: "2025.11",
-      desc: "基于HarmonyOS ArkTS开发的高保真界面还原。"
-    },
-    {
-      name: "ESP32环境监测系统",
-      role: "开发者",
-      date: "2025.11",
-      desc: "集成光照、温湿度、CO2等多传感器的数据采集与蜂鸣器/风扇联动控制。"
     }
   ]
 };
@@ -275,9 +248,9 @@ const ModernTemplate = ({ resume, isEditing, updateBasic, updateEducation, updat
   const accentText = accentColors[themeColor] || accentColors.blue;
 
   return (
-    <div className="flex flex-col md:flex-row h-full min-h-[297mm]">
+    <div className="flex flex-col md:flex-row print:flex-row h-full min-h-[297mm]">
       {/* Left Sidebar */}
-      <div className={`w-full md:w-1/3 ${sidebarBg} text-slate-300 p-8 flex flex-col gap-8 print:w-1/3 print:h-full`}>
+      <div className={`w-full md:w-1/3 print:w-1/3 ${sidebarBg} text-slate-300 p-8 flex flex-col gap-8 print:h-full`}>
         {/* Header Profile Section */}
         <div className="text-center md:text-left space-y-4 flex flex-col items-center md:items-start">
           <AvatarUpload 
@@ -498,7 +471,7 @@ const ModernTemplate = ({ resume, isEditing, updateBasic, updateEducation, updat
       </div>
 
       {/* Right Main Content */}
-      <div className="w-full md:w-2/3 p-8 md:p-12 text-slate-800 print:w-2/3 print:p-8 bg-white">
+      <div className="w-full md:w-2/3 print:w-2/3 p-8 md:p-12 text-slate-800 print:p-8 bg-white">
         
         {/* Summary */}
         <section className="mb-8">
@@ -712,9 +685,9 @@ const ClassicTemplate = ({ resume, isEditing, updateBasic, updateEducation, upda
         />
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 print:grid-cols-3 gap-8">
         {/* Main Column */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-2 print:col-span-2 space-y-6">
            {/* Experience */}
            <section>
               <h3 className={`text-lg font-bold uppercase tracking-widest ${themeText} border-b border-slate-200 mb-4 pb-1 flex justify-between items-center`}>
@@ -723,7 +696,7 @@ const ClassicTemplate = ({ resume, isEditing, updateBasic, updateEducation, upda
               </h3>
               <div className="space-y-6">
                 {resume.projects.map((project, idx) => (
-                  <div key={idx} className="relative group/item">
+                  <div key={idx} className="relative group/item break-inside-avoid">
                     {isEditing && <DeleteButton onClick={() => removeProject(idx)} className="absolute -right-8 top-0" />}
                     <div className="flex justify-between items-baseline mb-1">
                       <EditableField value={project.name} onChange={(v) => updateProject(idx, "name", v)} isEditing={isEditing} className="font-bold text-slate-800 text-lg" placeholder="项目名称" />
@@ -821,7 +794,7 @@ const ClassicTemplate = ({ resume, isEditing, updateBasic, updateEducation, upda
                   <li key={idx} className="text-sm text-slate-600 flex items-start gap-2 relative group/item">
                     {isEditing && <button onClick={() => removeCertificate(idx)} className="text-red-400 shrink-0"><X size={12}/></button>}
                     <span className="text-slate-400 mt-1">•</span>
-                    <EditableField value={cert} onChange={(v) => updateCertificate(idx, v)} isEditing={isEditing} multiline={true} className="w-full" />
+                    <EditableField value={cert} onChange={(v) => updateCertificate(idx, v)} isEditing={isEditing} className="w-full" />
                   </li>
                 ))}
              </ul>
@@ -833,217 +806,327 @@ const ClassicTemplate = ({ resume, isEditing, updateBasic, updateEducation, upda
 };
 
 
-// --- Main App Component ---
+// --- Main Application ---
 
 const App = () => {
   const [resume, setResume] = useState(() => {
-    try {
-      const saved = localStorage.getItem("resume_data_v2");
-      return saved ? JSON.parse(saved) : initialResumeData;
-    } catch (e) {
-      return initialResumeData;
-    }
+    const saved = localStorage.getItem("resume_data");
+    return saved ? JSON.parse(saved) : initialResumeData;
   });
-
   const [isEditing, setIsEditing] = useState(false);
-  const [template, setTemplate] = useState(TEMPLATES.modern);
   const [themeColor, setThemeColor] = useState(THEME_COLORS.blue);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [currentTemplate, setCurrentTemplate] = useState(TEMPLATES.modern);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("resume_data_v2", JSON.stringify(resume));
+    localStorage.setItem("resume_data", JSON.stringify(resume));
   }, [resume]);
 
-  const handlePrint = () => {
-    setIsEditing(false);
-    setTimeout(() => {
-      window.print();
-    }, 100);
+  // Update handlers
+  const updateBasic = (field, value) => {
+    setResume(prev => ({ ...prev, basics: { ...prev.basics, [field]: value } }));
   };
 
-  const handleExitEditAttempt = () => {
-    setShowExitConfirm(true);
-  };
-
-  const confirmExit = () => {
-    setIsEditing(false);
-    setShowExitConfirm(false);
-  };
-
-  const cancelExit = () => {
-    setShowExitConfirm(false);
-  };
-
-  const resetData = () => {
-    if (confirm("确定要重置简历到初始状态吗？所有修改将丢失。")) {
-      setResume(initialResumeData);
-    }
-  };
-
-  // --- Update Handlers (Refactored to be cleaner) ---
-  const updateBasic = (field, value) => setResume(p => ({...p, basics: {...p.basics, [field]: value}}));
-  
   const updateEducation = (idx, field, value) => {
-    const arr = [...resume.education]; arr[idx] = {...arr[idx], [field]: value};
-    setResume(p => ({...p, education: arr}));
+    const newEdu = [...resume.education];
+    newEdu[idx] = { ...newEdu[idx], [field]: value };
+    setResume(prev => ({ ...prev, education: newEdu }));
   };
-  const addEducation = () => setResume(p => ({...p, education: [...p.education, { institution: "学校", major: "专业", degree: "学历", start: "2024", end: "2025" }]}));
-  const removeEducation = (idx) => setResume(p => ({...p, education: p.education.filter((_, i) => i !== idx)}));
 
-  const updateSkills = (cat, idx, value) => {
-    const skills = {...resume.skills}; skills[cat][idx] = value;
-    setResume(p => ({...p, skills}));
+  const addEducation = () => {
+    setResume(prev => ({
+      ...prev,
+      education: [...prev.education, { institution: "新学校", major: "新专业", degree: "学位", start: "20xx", end: "20xx" }]
+    }));
   };
-  const addSkill = (cat) => {
-    const skills = {...resume.skills}; skills[cat] = [...skills[cat], "新技能"];
-    setResume(p => ({...p, skills}));
+
+  const removeEducation = (idx) => {
+    setResume(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== idx)
+    }));
   };
-  const removeSkill = (cat, idx) => {
-    const skills = {...resume.skills}; skills[cat] = skills[cat].filter((_, i) => i !== idx);
-    setResume(p => ({...p, skills}));
+
+  const updateSkills = (category, idx, value) => {
+    const newSkills = { ...resume.skills };
+    newSkills[category][idx] = value;
+    setResume(prev => ({ ...prev, skills: newSkills }));
+  };
+
+  const addSkill = (category) => {
+    const newSkills = { ...resume.skills };
+    newSkills[category] = [...newSkills[category], "新技能"];
+    setResume(prev => ({ ...prev, skills: newSkills }));
+  };
+
+  const removeSkill = (category, idx) => {
+    const newSkills = { ...resume.skills };
+    newSkills[category] = newSkills[category].filter((_, i) => i !== idx);
+    setResume(prev => ({ ...prev, skills: newSkills }));
   };
 
   const updateCertificate = (idx, value) => {
-    const arr = [...resume.certificates]; arr[idx] = value;
-    setResume(p => ({...p, certificates: arr}));
+    const newCerts = [...resume.certificates];
+    newCerts[idx] = value;
+    setResume(prev => ({ ...prev, certificates: newCerts }));
   };
-  const addCertificate = () => setResume(p => ({...p, certificates: [...p.certificates, "新证书"]}));
-  const removeCertificate = (idx) => setResume(p => ({...p, certificates: p.certificates.filter((_, i) => i !== idx)}));
+
+  const addCertificate = () => {
+    setResume(prev => ({ ...prev, certificates: [...prev.certificates, "新证书"] }));
+  };
+
+  const removeCertificate = (idx) => {
+    setResume(prev => ({ ...prev, certificates: prev.certificates.filter((_, i) => i !== idx) }));
+  };
 
   const updateProject = (idx, field, value) => {
-    const arr = [...resume.projects]; arr[idx] = {...arr[idx], [field]: value};
-    setResume(p => ({...p, projects: arr}));
-  };
-  const updateProjectDetail = (pIdx, dIdx, value) => {
-    const arr = [...resume.projects]; arr[pIdx].details[dIdx] = value;
-    setResume(p => ({...p, projects: arr}));
-  };
-  const addProject = () => setResume(p => ({...p, projects: [{ name: "新项目", role: "角色", date: "时间", desc: "描述", details: ["细节"] }, ...p.projects]}));
-  const removeProject = (idx) => setResume(p => ({...p, projects: p.projects.filter((_, i) => i !== idx)}));
-  const addProjectDetail = (idx) => {
-    const arr = [...resume.projects]; if(!arr[idx].details) arr[idx].details = []; arr[idx].details.push("详情");
-    setResume(p => ({...p, projects: arr}));
-  };
-  const removeProjectDetail = (pIdx, dIdx) => {
-    const arr = [...resume.projects]; arr[pIdx].details = arr[pIdx].details.filter((_, i) => i !== dIdx);
-    setResume(p => ({...p, projects: arr}));
+    const newProj = [...resume.projects];
+    newProj[idx] = { ...newProj[idx], [field]: value };
+    setResume(prev => ({ ...prev, projects: newProj }));
   };
 
-  const commonProps = {
-    resume, isEditing, updateBasic, updateEducation, updateSkills, updateCertificate, updateProject, updateProjectDetail,
-    addEducation, removeEducation, addSkill, removeSkill, addCertificate, removeCertificate, addProject, removeProject,
-    addProjectDetail, removeProjectDetail, themeColor
+  const addProject = () => {
+    setResume(prev => ({
+      ...prev,
+      projects: [{ name: "新项目", role: "角色", date: "时间", desc: "描述...", details: ["详情..."] }, ...prev.projects]
+    }));
+  };
+
+  const removeProject = (idx) => {
+    setResume(prev => ({ ...prev, projects: prev.projects.filter((_, i) => i !== idx) }));
+  };
+
+  const updateProjectDetail = (pIdx, dIdx, value) => {
+    const newProj = [...resume.projects];
+    newProj[pIdx].details[dIdx] = value;
+    setResume(prev => ({ ...prev, projects: newProj }));
+  };
+
+  const addProjectDetail = (pIdx) => {
+    const newProj = [...resume.projects];
+    newProj[pIdx].details.push("新详情条目");
+    setResume(prev => ({ ...prev, projects: newProj }));
+  };
+
+  const removeProjectDetail = (pIdx, dIdx) => {
+    const newProj = [...resume.projects];
+    newProj[pIdx].details = newProj[pIdx].details.filter((_, i) => i !== dIdx);
+    setResume(prev => ({ ...prev, projects: newProj }));
+  };
+
+  const toggleEdit = () => {
+    if (isEditing) {
+      setShowExitDialog(true);
+    } else {
+      setIsEditing(true);
+    }
+  };
+
+  const confirmExitEdit = () => {
+    setIsEditing(false);
+    setShowExitDialog(false);
+  };
+
+  const handlePrint = () => {
+    const wasEditing = isEditing;
+    setIsEditing(false);
+    // Give React a moment to re-render without edit UI before printing
+    setTimeout(() => {
+      window.print();
+      // Restore edit mode if it was on (optional, usually users expect it to stay preview)
+      if (wasEditing) setIsEditing(true);
+    }, 500);
+  };
+
+  const handleBackup = () => {
+    const dataStr = JSON.stringify(resume, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `resume_backup_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const fileImportRef = useRef(null);
+  
+  const handleImportClick = () => {
+    fileImportRef.current.click();
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const result = event.target.result;
+        if (typeof result === 'string') {
+          const importedData = JSON.parse(result);
+          // Basic validation could go here
+          setResume(importedData);
+          alert("数据导入成功！");
+        }
+      } catch (err) {
+        alert("导入失败：文件格式错误");
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = null; // reset
   };
 
   return (
-    <div className="min-h-screen p-0 md:p-8 flex flex-col items-center bg-gray-100 font-sans pb-32">
+    <div className="min-h-screen bg-gray-100 font-sans print:bg-white pb-20 print:pb-0">
       
-      {/* Floating Toolbar */}
-      <div className="no-print fixed bottom-8 z-50 flex gap-4 items-end pointer-events-none w-full max-w-[210mm] justify-end px-4">
+      {/* Toolbar - No Print */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur shadow-2xl rounded-full p-2 flex items-center gap-2 z-50 print:hidden border border-slate-200">
         
-        {/* Editing Controls (Pointer Events Auto) */}
-        <div className="flex flex-col gap-3 pointer-events-auto items-end">
-           
-           {/* Template & Color Switcher (Only visible in edit mode) */}
-           {isEditing && (
-             <div className="bg-white p-4 rounded-xl shadow-xl flex flex-col gap-4 animate-in slide-in-from-bottom-5 mb-2">
-                <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block flex items-center gap-1"><Layout size={12}/> 模板布局</span>
-                  <div className="flex gap-2">
-                    <button onClick={() => setTemplate(TEMPLATES.modern)} className={`px-3 py-1.5 rounded text-sm transition-colors ${template === TEMPLATES.modern ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>现代</button>
-                    <button onClick={() => setTemplate(TEMPLATES.classic)} className={`px-3 py-1.5 rounded text-sm transition-colors ${template === TEMPLATES.classic ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>经典</button>
-                  </div>
-                </div>
-                <div>
-                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block flex items-center gap-1"><Palette size={12}/> 主题颜色</span>
-                   <div className="flex gap-2">
-                      {Object.keys(THEME_COLORS).map(color => (
-                        <button 
-                          key={color}
-                          onClick={() => setThemeColor(color)}
-                          className={`w-6 h-6 rounded-full transition-transform hover:scale-110 ${themeColor === color ? 'ring-2 ring-offset-2 ring-slate-400 scale-110' : ''}`}
-                          style={{ backgroundColor: color === 'slate' ? '#475569' : color === 'emerald' ? '#10b981' : color === 'violet' ? '#8b5cf6' : color === 'rose' ? '#f43f5e' : '#3b82f6' }}
-                        />
-                      ))}
-                   </div>
-                </div>
-                <div className="h-px bg-slate-100 my-1"></div>
-                 <button onClick={resetData} className="text-red-500 text-xs hover:underline text-left">重置所有数据</button>
-             </div>
-           )}
+        <button 
+          onClick={toggleEdit}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
+            isEditing 
+              ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700" 
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          {isEditing ? <Check size={18} /> : <Edit2 size={18} />}
+          {isEditing ? "完成编辑" : "编辑简历"}
+        </button>
 
-           <div className="flex gap-3">
-             {/* Edit Toggle Buttons */}
-             {isEditing ? (
-               <>
-                <button 
-                  onClick={handleExitEditAttempt}
-                  className="bg-slate-700 hover:bg-slate-800 text-white p-4 rounded-full shadow-lg transition-all flex items-center justify-center gap-2 group"
-                  title="取消编辑"
-                >
-                  <X size={24} />
-                </button>
-                <button 
-                  onClick={() => setIsEditing(false)}
-                  className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-lg transition-all flex items-center justify-center gap-2 group"
-                  title="保存并完成"
-                >
-                  <Check size={24} />
-                  <span className="font-bold pr-2">完成</span>
-                </button>
-               </>
-             ) : (
-               <button 
-                onClick={() => setIsEditing(true)}
-                className="bg-slate-800 hover:bg-slate-900 text-white p-4 rounded-full shadow-lg transition-all flex items-center justify-center gap-2 group"
-              >
-                <Edit2 size={24} />
-                <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap px-0 group-hover:px-2">
-                  编辑简历
-                </span>
-              </button>
-             )}
-
-             {/* Download */}
-             <button 
-                onClick={handlePrint}
-                className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all flex items-center justify-center gap-2 group"
-              >
-                <Download size={24} />
-                <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap px-0 group-hover:px-2">
-                  下载
-                </span>
-              </button>
-           </div>
+        <div className="w-px h-6 bg-slate-300 mx-1"></div>
+        
+        <div className="flex items-center gap-1 bg-slate-100 rounded-full p-1">
+          <button 
+            onClick={() => setCurrentTemplate(TEMPLATES.modern)}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${currentTemplate === TEMPLATES.modern ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            现代侧边
+          </button>
+           <button 
+            onClick={() => setCurrentTemplate(TEMPLATES.classic)}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${currentTemplate === TEMPLATES.classic ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            经典专业
+          </button>
         </div>
+
+        <div className="w-px h-6 bg-slate-300 mx-1"></div>
+
+        <div className="flex items-center gap-1 px-2">
+           {Object.keys(THEME_COLORS).map(color => (
+             <button
+              key={color}
+              onClick={() => setThemeColor(color)}
+              className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${themeColor === color ? 'border-slate-600 scale-110' : 'border-transparent'}`}
+              style={{ backgroundColor: color === 'slate' ? '#475569' : color === 'emerald' ? '#10b981' : color === 'violet' ? '#8b5cf6' : color === 'rose' ? '#f43f5e' : '#3b82f6' }}
+              title={color}
+             />
+           ))}
+        </div>
+
+        <div className="w-px h-6 bg-slate-300 mx-1"></div>
+
+        <button 
+          onClick={handlePrint}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 text-white hover:bg-slate-900 transition-colors shadow-lg"
+          title="导出 PDF"
+        >
+          <Download size={18} />
+          <span className="hidden sm:inline">导出 PDF</span>
+        </button>
+
+         <div className="relative group">
+            <button className="p-2 rounded-full hover:bg-slate-100 text-slate-600">
+               <Save size={18} />
+            </button>
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white rounded-lg shadow-xl p-2 flex flex-col gap-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-32 text-sm">
+               <button onClick={handleBackup} className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded text-slate-700 text-left">
+                  <FileJson size={14}/> 备份数据
+               </button>
+               <button onClick={handleImportClick} className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded text-slate-700 text-left">
+                  <UploadCloud size={14}/> 导入备份
+               </button>
+               <input type="file" ref={fileImportRef} onChange={handleImportFile} className="hidden" accept=".json" />
+            </div>
+         </div>
       </div>
 
-      {/* Confirmation Modal */}
-      {showExitConfirm && (
-        <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95">
-            <h3 className="text-lg font-bold text-slate-800 mb-2">退出编辑模式？</h3>
-            <p className="text-slate-600 mb-6">您的修改已经自动保存。确定要退出编辑视图吗？</p>
-            <div className="flex gap-3 justify-end">
-              <button onClick={cancelExit} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">取消</button>
-              <button onClick={confirmExit} className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900">确定退出</button>
+      {/* Exit Dialog */}
+      {showExitDialog && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-200">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">确认退出编辑？</h3>
+            <p className="text-slate-600 mb-6 text-sm">您的更改会自动保存，确定要切换回预览模式吗？</p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowExitDialog(false)}
+                className="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium text-sm"
+              >
+                取消
+              </button>
+              <button 
+                onClick={confirmExitEdit}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium text-sm shadow-lg shadow-blue-200"
+              >
+                确认退出
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Resume Container */}
-      <div className={`w-full max-w-[210mm] bg-white shadow-2xl print-shadow-none transition-all duration-300 ${isEditing ? "scale-[1.02] ring-4 ring-blue-500/20 my-8" : ""}`}>
-        {template === TEMPLATES.modern ? (
-          <ModernTemplate {...commonProps} />
+      {/* Resume Container - A4 Size Aspect Ratio managed largely by content but constrained max-width */}
+      <div className="max-w-[210mm] mx-auto bg-white shadow-2xl print:shadow-none print:max-w-none print:w-full min-h-[297mm]">
+        {currentTemplate === TEMPLATES.modern ? (
+          <ModernTemplate 
+            resume={resume} 
+            isEditing={isEditing} 
+            updateBasic={updateBasic}
+            updateEducation={updateEducation}
+            updateSkills={updateSkills}
+            updateCertificate={updateCertificate}
+            updateProject={updateProject}
+            updateProjectDetail={updateProjectDetail}
+            addEducation={addEducation}
+            removeEducation={removeEducation}
+            addSkill={addSkill}
+            removeSkill={removeSkill}
+            addCertificate={addCertificate}
+            removeCertificate={removeCertificate}
+            addProject={addProject}
+            removeProject={removeProject}
+            addProjectDetail={addProjectDetail}
+            removeProjectDetail={removeProjectDetail}
+            themeColor={themeColor}
+          />
         ) : (
-          <ClassicTemplate {...commonProps} />
+          <ClassicTemplate 
+            resume={resume} 
+            isEditing={isEditing} 
+            updateBasic={updateBasic}
+            updateEducation={updateEducation}
+            updateSkills={updateSkills}
+            updateCertificate={updateCertificate}
+            updateProject={updateProject}
+            updateProjectDetail={updateProjectDetail}
+            addEducation={addEducation}
+            removeEducation={removeEducation}
+            addSkill={addSkill}
+            removeSkill={removeSkill}
+            addCertificate={addCertificate}
+            removeCertificate={removeCertificate}
+            addProject={addProject}
+            removeProject={removeProject}
+            addProjectDetail={addProjectDetail}
+            removeProjectDetail={removeProjectDetail}
+            themeColor={themeColor}
+          />
         )}
       </div>
-
-      <footer className="mt-8 text-slate-400 text-sm no-print">
-        <p>Built with React & Tailwind</p>
-      </footer>
     </div>
   );
 };
